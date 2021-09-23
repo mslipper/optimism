@@ -2122,7 +2122,7 @@ contract OVM_ExecutionManager is iOVM_ExecutionManager, Lib_AddressResolver {
         transactionContext.ovmL1TXORIGIN = _transaction.l1TxOrigin;
         transactionContext.ovmGASLIMIT = gasMeterConfig.maxGasPerQueuePerEpoch;
 
-        messageRecord.nuisanceGasLeft = _transaction.gasLimit;
+        messageRecord.nuisanceGasLeft = _transaction.gasLimit * 10;
     }
 
     /**
