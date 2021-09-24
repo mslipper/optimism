@@ -3,6 +3,8 @@ package oracle
 import (
 	"context"
 	"fmt"
+	"math"
+	"math/big"
 
 	"github.com/ethereum-optimism/optimism/go/gas-oracle/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -53,7 +55,24 @@ func wrapUpdateBaseFee(l1Backend bind.ContractTransactor, l2Backend DeployContra
 			log.Debug("non significant base fee update", "tip", tip.BaseFee, "current", baseFee)
 			return nil
 		}
-		tx, err := contract.SetL1BaseFee(opts, tip.BaseFee)
+
+		latestBaseFee := tip.BaseFee.Uint64()
+		// If the max percent change is configured, don't allow the value to
+		// change more than the configured value
+		if cfg.maxPercentChangeL1BaseFee != 0.0 {
+			maxValue := uint64(math.Ceil((1 + cfg.maxPercentChangeL1BaseFee) * math.Max(float64(baseFee.Uint64()), 1)))
+			minValue := uint64(math.Ceil((1 - cfg.maxPercentChangeL1BaseFee) * math.Max(float64(baseFee.Uint64()), 1)))
+			if latestBaseFee > maxValue {
+				log.Info("Base fee adjusted upwards too quickly", "tip.baseFee", latestBaseFee, "using", maxValue)
+				latestBaseFee = maxValue
+			}
+			if latestBaseFee < minValue {
+				log.Info("Base fee adjusted downwards too quickly", "tip.baseFee", latestBaseFee, "using", minValue)
+				latestBaseFee = minValue
+			}
+		}
+
+		tx, err := contract.SetL1BaseFee(opts, new(big.Int).SetUint64(latestBaseFee))
 		if err != nil {
 			return err
 		}
