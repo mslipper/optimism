@@ -133,7 +133,7 @@ describe('Native ETH Integration Tests', async () => {
     const depositReceipts = await env.waitForXDomainTransaction(
       env.l1Bridge.depositETHTo(l2Bob.address, DEFAULT_TEST_GAS_L2, '0xFFFF', {
         value: depositAmount,
-        gasLimit: DEFAULT_TEST_GAS_L1,
+        gasLimit: DEFAULT_TEST_GAS_L1 * 1.2,
       }),
       Direction.L1ToL2
     )
