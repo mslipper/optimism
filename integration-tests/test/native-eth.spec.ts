@@ -127,7 +127,8 @@ describe('Native ETH Integration Tests', async () => {
     )
   })
 
-  it('depositETHTo', async () => {
+  it.only('depositETHTo', async () => {
+    // lets see what this does
     const depositAmount = 10
     const preBalances = await getBalances(env)
     const depositReceipts = await env.waitForXDomainTransaction(
