@@ -61,29 +61,29 @@ const config: HardhatUserConfig = {
       {
         version: '0.8.9',
         settings: {
-          optimizer: { enabled: true, runs: 10_000 },
-          metadata: {
-            bytecodeHash: 'none',
-          },
-          outputSelection: {
-            '*': {
-              '*': ['storageLayout'],
-            },
-          },
+          optimizer: { enabled: true, runs: 2 },
         },
       },
       {
         version: '0.5.17', // Required for WETH9
         settings: {
           optimizer: { enabled: true, runs: 10_000 },
-          outputSelection: {
-            '*': {
-              '*': ['storageLayout'],
-            },
-          },
         },
       },
     ],
+    settings: {
+      metadata: {
+        bytecodeHash: 'none',
+      },
+      outputSelection: {
+        '*': {
+          '*': [
+            'metadata',
+            'storageLayout'
+          ],
+        },
+      },
+    }
   },
   typechain: {
     outDir: 'dist/types',

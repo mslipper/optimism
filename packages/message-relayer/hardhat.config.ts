@@ -16,7 +16,10 @@ const config: HardhatUserConfig = {
       },
       outputSelection: {
         '*': {
-          '*': ['storageLayout'],
+          '*': [
+            'metadata',
+            'storageLayout'
+          ],
         },
       },
     },
