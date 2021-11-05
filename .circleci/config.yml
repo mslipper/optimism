@@ -6,7 +6,7 @@ jobs:
       resource_class: large
     steps:
       - checkout
-      - docker build -f ./ops/docker/Dockerfile.builder -t ethereumoptimism/builder:$CIRCLE_SHA1
+      - run: docker build -f ./ops/docker/Dockerfile.builder -t ethereumoptimism/builder:$CIRCLE_SHA1 .
 
 workflows:
   build-monorepo:
