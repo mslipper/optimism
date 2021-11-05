@@ -24,3 +24,6 @@ workflows:
   build-monorepo:
     jobs:
       - build-builder
+      - build-itests
+        depends:
+          - build-builder
