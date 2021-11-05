@@ -1,30 +1,11 @@
-ARG LOCAL_REGISTRY=docker.io
-FROM ${LOCAL_REGISTRY}/ethereumoptimism/builder AS builder
+ARG REGISTRY=docker.io
+ARG TAG=latest
+FROM ${REGISTRY}/ethereumoptimism/builder:${TAG}
 
-FROM node:14-alpine
+WORKDIR /optimism/integration-tests
 
-RUN apk add --no-cache git curl python bash jq
-
-WORKDIR /opt/optimism/
-
-COPY --from=builder /optimism/*.json /optimism/yarn.lock ./
-COPY --from=builder /optimism/node_modules ./node_modules
-
-# copy deps (would have been nice if docker followed the symlinks required)
-COPY --from=builder /optimism/packages/core-utils/package.json ./packages/core-utils/package.json
-COPY --from=builder /optimism/packages/core-utils/dist ./packages/core-utils/dist
-
-COPY --from=builder /optimism/packages/message-relayer/package.json ./packages/message-relayer/package.json
-COPY --from=builder /optimism/packages/message-relayer/dist ./packages/message-relayer/dist
-
-COPY --from=builder /optimism/packages/hardhat-ovm/package.json ./packages/hardhat-ovm/package.json
-COPY --from=builder /optimism/packages/hardhat-ovm/dist ./packages/hardhat-ovm/dist
-
-COPY --from=builder /optimism/packages/contracts ./packages/contracts
-
-# get the needed built artifacts
-WORKDIR /opt/optimism/integration-tests
-COPY --from=builder /optimism/integration-tests ./
+RUN yarn workspace @eth-optimism/integration-tests build:integration && \
+    yarn --cwd ./packages/contracts ts-node bin/take-dump.ts
 
 COPY ./ops/scripts/integration-tests.sh ./
-ENTRYPOINT yarn test:integration
+CMD ["yarn", "test:integration"]
