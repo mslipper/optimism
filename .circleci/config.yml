@@ -25,5 +25,5 @@ workflows:
     jobs:
       - build-builder
       - build-itests:
-        requires:
-          - build-builder
+          requires:
+            - build-builder
