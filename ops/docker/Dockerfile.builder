@@ -33,4 +33,4 @@ COPY packages ./packages
 COPY integration-tests ./integration-tests
 
 RUN ls -lah .
-RUN ls-lah ./packages/core-utils
+RUN ls -lah ./packages/core-utils
