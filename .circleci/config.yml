@@ -7,7 +7,16 @@ jobs:
       docker_layer_caching: true
     steps:
       - checkout
-      - run: docker build -f ./ops/docker/Dockerfile.builder -t ethereumoptimism/builder:$CIRCLE_SHA1 .
+      - run:
+          name: Build
+          command: docker build -f ./ops/docker/Dockerfile.builder -t mslipper/optimism-builder:$CIRCLE_SHA1 .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-builder:$CIRCLE_SHA1
+
+
   build-itests:
     machine:
       image: ubuntu-2004:202107-02
@@ -17,13 +26,16 @@ jobs:
       - checkout
       - run: |
           docker build -f ./ops/docker/Dockerfile.integration-tests \
-            -t ethereumoptimism/integration-tests:$CIRCLE_SHA1 \
+            -t mslipper/optimism-integration-tests:$CIRCLE_SHA1 \
             --build-arg TAG=$CIRCLE_SHA1 \
             .
+
 workflows:
   build-monorepo:
     jobs:
-      - build-builder
+      - build-builder:
+          context: optimism
       - build-itests:
+          context: optimism
           requires:
             - build-builder
