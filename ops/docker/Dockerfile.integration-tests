@@ -5,7 +5,7 @@ FROM ${REGISTRY}/mslipper/optimism-builder:${TAG}
 WORKDIR /optimism/integration-tests
 
 RUN yarn workspace @eth-optimism/integration-tests build:integration && \
-    yarn --cwd ./packages/contracts ts-node bin/take-dump.ts
+    yarn --cwd /optimism/packages/contracts ts-node bin/take-dump.ts
 
 COPY ./ops/scripts/integration-tests.sh ./
 CMD ["yarn", "test:integration"]
