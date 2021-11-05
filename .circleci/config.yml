@@ -4,19 +4,17 @@ jobs:
     machine:
       image: ubuntu-2004:202107-02
       resource_class: large
+      docker_layer_caching: true
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run: docker build -f ./ops/docker/Dockerfile.builder -t ethereumoptimism/builder:$CIRCLE_SHA1 .
   build-itests:
     machine:
       image: ubuntu-2004:202107-02
       resource_class: large
+      docker_layer_caching: true
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run: |
           docker build -f ./ops/docker/Dockerfile.integration-tests \
             -t ethereumoptimism/integration-tests:$CIRCLE_SHA1 \
