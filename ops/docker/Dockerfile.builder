@@ -29,7 +29,6 @@ COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/pa
 COPY integration-tests/package.json ./integration-tests/package.json
 RUN yarn install --frozen-lockfile
 
-COPY *.json yarn.lock .
 COPY packages ./packages
 COPY integration-tests ./integration-tests
 
