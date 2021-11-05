@@ -1,6 +1,6 @@
 ARG REGISTRY=docker.io
 ARG TAG=latest
-FROM ${REGISTRY}/ethereumoptimism/builder:${TAG}
+FROM ${REGISTRY}/mslipper/optimism-builder:${TAG}
 
 WORKDIR /optimism/integration-tests
 
