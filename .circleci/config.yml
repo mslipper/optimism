@@ -1,6 +1,8 @@
 version: 2.1
 jobs:
   build-builder:
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - setup_remote_docker:
@@ -16,6 +18,8 @@ jobs:
             docker push mslipper/optimism-builder:$CIRCLE_SHA1
 
   build-l2geth:
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - setup_remote_docker:
@@ -35,6 +39,8 @@ jobs:
             docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
 
   build-dtl:
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - setup_remote_docker:
@@ -54,6 +60,8 @@ jobs:
 
 
   build-itests:
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - setup_remote_docker:
@@ -72,6 +80,12 @@ workflows:
     jobs:
       - build-builder:
           context: optimism
+      - build-l2geth:
+          context: optimism
+      - build-dtl:
+          context: optimism
+          requires:
+            - build-builder
       - build-itests:
           context: optimism
           requires:
