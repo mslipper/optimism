@@ -179,6 +179,7 @@ jobs:
           command: |
             cd ./ops
             docker-compose build l1_chain
+            docker pull mslipper/optimism-l2geth:$CIRCLE_SHA1
             TAG=$CIRCLE_SHA1 docker-compose -f ./docker-compose-itests.yml up --no-build -d
       - run: 
           name: Wait for the sequencer
