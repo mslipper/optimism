@@ -189,7 +189,7 @@ workflows:
             - build-builder
       - run-itests:
           context: optimism
-          reuqires:
+          requires:
             - build-builder
             - build-l2geth
             - build-gas-oracle
