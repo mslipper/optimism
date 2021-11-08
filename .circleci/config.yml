@@ -151,7 +151,7 @@ jobs:
       - run:
           name: Bring the stack up
           command: |
-            cd ./ops && TAG=$CIRCLE_SHA1 docker-compose up --no-build -d
+            cd ./ops && TAG=$CIRCLE_SHA1 docker-compose -f ./docker-compose-itests.yml up --no-build -d
       - run: 
           name: Wait for the sequencer
           command: |
@@ -159,7 +159,7 @@ jobs:
       - run:
           name: Run the integration tests
           command: |
-            cd ops && TAG=$CIRCLE_SHA1 docker-compose run integration_tests
+            cd ops && TAG=$CIRCLE_SHA1 docker-compose -f ./docker-compose-itests.yml run --no-build integration_tests
 
 
 workflows:
