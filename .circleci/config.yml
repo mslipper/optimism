@@ -1,12 +1,11 @@
 version: 2.1
 jobs:
   build-builder:
-    machine:
-      image: ubuntu-2004:202107-02
-      resource_class: large
-      docker_layer_caching: true
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
       - run:
           name: Build
           command: docker build -f ./ops/docker/Dockerfile.builder -t mslipper/optimism-builder:$CIRCLE_SHA1 .
@@ -16,19 +15,57 @@ jobs:
             echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push mslipper/optimism-builder:$CIRCLE_SHA1
 
-
-  build-itests:
-    machine:
-      image: ubuntu-2004:202107-02
-      resource_class: large
-      docker_layer_caching: true
+  build-l2geth:
     steps:
       - checkout
-      - run: |
-          docker build -f ./ops/docker/Dockerfile.integration-tests \
-            -t mslipper/optimism-integration-tests:$CIRCLE_SHA1 \
-            --build-arg TAG=$CIRCLE_SHA1 \
-            .
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run:
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.geth \
+              -t mslipper/optimism-l2geth:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
+
+  build-dtl:
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run:
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.data-transport-layer \
+              -t mslipper/optimism-dtl:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
+      - name: Push
+        command: |
+          echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
+
+
+  build-itests:
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run: 
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.integration-tests \
+              -t mslipper/optimism-integration-tests:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
 
 workflows:
   build-monorepo:

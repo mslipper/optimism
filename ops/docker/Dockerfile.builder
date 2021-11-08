@@ -6,7 +6,7 @@
 # when used with typescript/hardhat: https://github.com/nomiclabs/hardhat/issues/1219
 FROM node:14-alpine
 
-RUN apk add --no-cache git curl python3 bash jq
+RUN apk add --no-cache git curl python3 bash jq make
 
 # Pre-download the compilers so that they do not need to be downloaded inside
 # the image when building
