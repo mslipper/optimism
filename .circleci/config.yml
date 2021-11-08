@@ -168,7 +168,8 @@ jobs:
 
   run-itests:
     docker:
-      - image: cimg/base:2021.04
+      image: cimg/base:2021.04
+      resource_class: large
     steps:
       - checkout
       - setup_remote_docker:
