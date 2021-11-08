@@ -29,3 +29,4 @@ COPY packages ./packages
 COPY integration-tests ./integration-tests
 
 RUN yarn build
+RUN yarn --cwd ./packages/contracts ts-node bin/take-dump.ts
