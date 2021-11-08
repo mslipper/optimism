@@ -5,10 +5,7 @@ version: "3"
 services:
   # this is a helper service used because there's no official hardhat image
   l1_chain:
-    image: ethereumoptimism/hardhat
-    build:
-      context: ./docker/hardhat
-      dockerfile: Dockerfile
+    image: mslipper/optimism-hardhat:$TAG
     ports:
         # expose the service to the host for integration testing
       - ${L1CHAIN_HTTP_PORT:-9545}:8545
@@ -60,7 +57,7 @@ services:
     depends_on:
       - l1_chain
       - deployer
-    image: mslipper/optimism-l2geth:TAG
+    image: mslipper/optimism-l2geth:$TAG
     build:
       context: ..
     # override with the geth script and the env vars required for it

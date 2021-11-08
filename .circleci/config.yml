@@ -138,6 +138,32 @@ jobs:
               -t mslipper/optimism-integration-tests:$CIRCLE_SHA1 \
               --build-arg TAG=$CIRCLE_SHA1 \
               .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-integration-tests:$CIRCLE_SHA1
+
+  build-hardhat:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run: 
+          name: Build
+          command: |
+            docker build -f ./ops/docker/hardhat/Dockerfile \
+              -t mslipper/optimism-hardhat:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              ./ops/docker/hardhat
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-hardhat:$CIRCLE_SHA1
 
 
   run-itests:
@@ -167,6 +193,8 @@ jobs:
 workflows:
   monorepo-itests:
     jobs:
+      - build-hardhat:
+          context: optimism
       - build-builder:
           context: optimism
       - build-l2geth:
@@ -192,6 +220,7 @@ workflows:
       - run-itests:
           context: optimism
           requires:
+            - build-hardhat
             - build-builder
             - build-l2geth
             - build-gas-oracle
