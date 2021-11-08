@@ -32,5 +32,4 @@ RUN yarn install --frozen-lockfile
 COPY packages ./packages
 COPY integration-tests ./integration-tests
 
-RUN ls -lah .
-RUN ls -lah ./packages/core-utils
+RUN yarn build
