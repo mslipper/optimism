@@ -1,6 +1,6 @@
 ARG REGISTRY=docker.io
 ARG TAG=latest
-FROM ${REGISTRY}/mslipper/optimism-builder:${TAG}
+FROM ${REGISTRY}/mslipper/optimism-builder:${TAG} as builder
 
 FROM node:14-alpine
 

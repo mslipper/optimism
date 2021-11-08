@@ -1,13 +1,12 @@
 version: 2.1
 jobs:
   build-builder:
-    docker:
-      - image: cimg/base:2021.04
+    machine:
+      image: ubuntu-2004:202107-02
+      docker_layer_caching: true
+      resource_class: 2xlarge
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
-          docker_layer_caching: true
       - run:
           name: Build
           command: docker build -f ./ops/docker/Dockerfile.builder -t mslipper/optimism-builder:$CIRCLE_SHA1 .
@@ -59,6 +58,49 @@ jobs:
             echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
 
+  build-deployer:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run:
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.deployer \
+              -t mslipper/optimism-deployer:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-deployer:$CIRCLE_SHA1
+
+
+  build-batch-submitter:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run:
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.batch-submitter \
+              -t mslipper/optimism-batch-submitter:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-batch-submitter:$CIRCLE_SHA1
+
 
   build-itests:
     docker:
@@ -77,13 +119,21 @@ jobs:
               .
 
 workflows:
-  build-monorepo:
+  monorepo-itests:
     jobs:
       - build-builder:
           context: optimism
       - build-l2geth:
           context: optimism
       - build-dtl:
+          context: optimism
+          requires:
+            - build-builder
+      - build-deployer:
+          context: optimism
+          requires:
+            - build-builder
+      - build-batch-submitter:
           context: optimism
           requires:
             - build-builder

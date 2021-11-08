@@ -1,5 +1,6 @@
-ARG LOCAL_REGISTRY=docker.io
-FROM ${LOCAL_REGISTRY}/ethereumoptimism/builder AS builder
+ARG REGISTRY=docker.io
+ARG TAG=latest
+FROM ${REGISTRY}/mslipper/optimism-builder:${TAG} as builder
 
 FROM node:14-alpine
 
@@ -36,4 +37,4 @@ COPY packages/contracts/test/helpers/constants.ts ./test/helpers/constants.ts
 COPY packages/contracts/scripts ./scripts
 
 COPY ./ops/scripts/deployer.sh .
-ENTRYPOINT yarn run deploy
+CMD yarn run deploy
