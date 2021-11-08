@@ -8,6 +8,8 @@ do
     sleep 3
     if [ $i -eq $RETRIES ]; then
         echo 'Timed out waiting for sequencer'
+        echo 'Deployer logs:'
+        docker logs ops_deployer_1 -n 500
         echo 'Sequencer logs:'
         docker logs ops_l2geth_1 -n 500
         exit 1
