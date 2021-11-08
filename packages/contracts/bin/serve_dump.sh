@@ -11,7 +11,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 PYTHON=${PYTHON:-python3}
 HOST=${HOST:-0.0.0.0}
 PORT=${PORT:-8081}
-DIRECTORY=$DIR/../dist/dumps
+DIRECTORY=$DIR/dist/dumps
 
 if [ ! command -v $PYTHON&>/dev/null ]; then
     echo "Please install python"
