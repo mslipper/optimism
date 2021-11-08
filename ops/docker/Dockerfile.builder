@@ -1,9 +1,5 @@
 # This Dockerfile builds all the dependencies needed by the monorepo, and should
 # be used to build any of the follow-on services
-#
-# ### BASE: Install deps
-# We do not use Alpine because there's a regression causing it to be very slow
-# when used with typescript/hardhat: https://github.com/nomiclabs/hardhat/issues/1219
 FROM node:14-alpine
 
 RUN apk add --no-cache git curl python3 bash jq make

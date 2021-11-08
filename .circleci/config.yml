@@ -37,6 +37,27 @@ jobs:
             echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
 
+  build-gas-oracle:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+      - run:
+          name: Build
+          command: |
+            docker build -f ./ops/docker/Dockerfile.gas-oracle \
+              -t mslipper/optimism-gas-oracle:$CIRCLE_SHA1 \
+              --build-arg TAG=$CIRCLE_SHA1 \
+              .
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push mslipper/optimism-gas-oracle:$CIRCLE_SHA1
+
   build-dtl:
     docker:
       - image: cimg/base:2021.04
@@ -125,6 +146,8 @@ workflows:
           context: optimism
       - build-l2geth:
           context: optimism
+      - build-gas-oracle:
+          context: optimism
       - build-dtl:
           context: optimism
           requires:
@@ -141,3 +164,13 @@ workflows:
           context: optimism
           requires:
             - build-builder
+      - run-itests:
+          context: optimism
+          reuqires:
+            - build-builder
+            - build-l2geth
+            - build-gas-oracle
+            - build-dtl
+            - build-deployer
+            - build-batch-submitter
+            - build-itests
