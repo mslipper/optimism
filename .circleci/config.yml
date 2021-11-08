@@ -56,7 +56,7 @@ jobs:
           name: Push
           command: |
             echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push mslipper/optimism-l2geth:$CIRCLE_SHA1
+            docker push mslipper/optimism-dtl:$CIRCLE_SHA1
 
   build-deployer:
     docker:
