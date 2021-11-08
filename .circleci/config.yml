@@ -192,7 +192,7 @@ jobs:
       - run:
           name: Run the integration tests
           command: |
-            cd ops && TAG=$CIRCLE_SHA1 docker-compose -f ./docker-compose-itests.yml up --no-build integration_tests
+            cd ops && TAG=$CIRCLE_SHA1 docker-compose -f ./docker-compose-itests.yml run integration_tests
 
 
 workflows:
