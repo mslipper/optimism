@@ -22,6 +22,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 50000,
+    slow: 5000,
   },
   solidity: '0.7.6',
   ovm: {
