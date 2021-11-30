@@ -1,0 +1,288 @@
+apiVersion: stack.optimism-stacks.net/v1
+kind: CliqueL1
+metadata:
+  name: test-l1
+---
+apiVersion: stack.optimism-stacks.net/v1
+kind: Deployer
+metadata:
+  name: test-l1
+spec:
+  image: "mslipper/optimism-deployer:latest"
+  l1_url: "http://test-l1-clique:8545"
+  l1_timeout_seconds: 60
+  env:
+    - name: FRAUD_PROOF_WINDOW_SECONDS
+      value: "0"
+    - name: DEPLOYER_PRIVATE_KEY
+      value: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    - name: SEQUENCER_PRIVATE_KEY
+      value: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    - name: PROPOSER_PRIVATE_KEY
+      value: "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
+    - name: GAS_PRICE_ORACLE_OWNER
+      value: "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc"
+    - name: WHITELIST_OWNER
+      value: "0x0000000000000000000000000000000000000000"
+    - name: L1_FEE_WALLET_ADDRESS
+      value: "0x391716d440c151c42cdf1c95c1d83a5427bca52c"
+    - name: L2_CHAIN_ID
+      value: "420"
+    - name: L2_BLOCK_GAS_LIMIT
+      value: "15000000"
+    - name: BLOCK_SIGNER_ADDRESS
+      value: "0x00000398232E2064F896018496b4b44b3D62751F"
+    - name: GAS_PRICE_ORACLE_OVERHEAD
+      value: "2750"
+    - name: GAS_PRICE_ORACLE_SCALAR
+      value: "1500000"
+    - name: GAS_PRICE_ORACLE_L1_BASE_FEE
+      value: "1"
+    - name: GAS_PRICE_ORACLE_GAS_PRICE
+      value: "1"
+    - name: GAS_PRICE_ORACLE_DECIMALS
+      value: "6"
+---
+apiVersion: stack.optimism-stacks.net/v1
+kind: DataTransportLayer
+metadata:
+  name: test-l1
+spec:
+  image: "ethereumoptimism/data-transport-layer:latest"
+  l1_url: "http://test-l1-clique:8545"
+  l1_timeout_seconds: 60
+  deployer_url: "http://test-l1-deployer:8081"
+  deployer_timeout_seconds: 600
+  env:
+    - name: DATA_TRANSPORT_LAYER__L2_CHAIN_ID
+      value: "420"
+    - name: DATA_TRANSPORT_LAYER__CONFIRMATIONS
+      value: "0"
+    - name: DATA_TRANSPORT_LAYER__USE_SENTRY
+      value: "false"
+    - name: DATA_TRANSPORT_LAYER__ENABLE_METRICS
+      value: "false"
+    - name: DATA_TRANSPORT_LAYER__NODE_ENV
+      value: "development"
+    - name: DATA_TRANSPORT_LAYER__ETH_NETWORK_NAME
+      value: ""
+    - name: DATA_TRANSPORT_LAYER__SYNC_FROM_L1
+      value: "true"
+    - name: DATA_TRANSPORT_LAYER__SYNC_FROM_L2
+      value: "false"
+    - name: DATA_TRANSPORT_LAYER__DB_PATH
+      value: "/db"
+    - name: DATA_TRANSPORT_LAYER__SERVER_PORT
+      value: "7878"
+    - name: DATA_TRANSPORT_LAYER__TRANSACTIONS_PER_POLLING_INTERVAL
+      value: "1000"
+    - name: DATA_TRANSPORT_LAYER__POLLING_INTERVAL
+      value: "100"
+    - name: DATA_TRANSPORT_LAYER__LOGS_PER_POLLING_INTERVAL
+      value: "2000"
+    - name: DATA_TRANSPORT_LAYER__DANGEROUSLY_CATCH_ALL_ERRORS
+      value: "true"
+    - name: DATA_TRANSPORT_LAYER__SERVER_HOSTNAME
+      value: "0.0.0.0"
+---
+apiVersion: stack.optimism-stacks.net/v1
+kind: Sequencer
+metadata:
+  name: test-l1
+spec:
+  image: "ethereumoptimism/l2geth:latest"
+  l1_url: "http://test-l1-clique:8545"
+  l1_timeout_seconds: 60
+  deployer_url: "http://test-l1-deployer:8081"
+  deployer_timeout_seconds: 600
+  dtl_url: "http://test-l1-dtl:7878"
+  dtl_timeout_seconds: 630
+  env:
+    - name: RPC_ENABLE
+      value: "true"
+    - name: RPC_ADDR
+      value: "0.0.0.0"
+    - name: RPC_CORS_DOMAIN
+      value: "*"
+    - name: RPC_VHOSTS
+      value: "*"
+    - name: RPC_PORT
+      value: "8545"
+    - name: WS
+      value: "true"
+    - name: WS_ADDR
+      value: "0.0.0.0"
+    - name: TARGET_GAS_LIMIT
+      value: "11000000"
+    - name: RPC_API
+      value: "eth,rollup,net,web3"
+    - name: WS_API
+      value: "eth,rollup,net,web3"
+    - name: WS_ORIGINS
+      value: "*"
+    - name: GASPRICE
+      value: "0"
+    - name: NO_USB
+      value: "true"
+    - name: GCMODE
+      value: "archive"
+    - name: NO_DISCOVER
+      value: "true"
+    - name: ETH1_SYNC_SERVICE_ENABLE
+      value: "true"
+    - name: USING_OVM
+      value: "true"
+    - name: ROLLUP_MAX_CALLDATA_SIZE
+      value: "40000"
+    - name: CHAIN_ID
+      value: "420"
+    - name: NETWORK_ID
+      value: "420"
+    - name: ETH1_L1_ETH_GATEWAY_ADDRESS
+      value: ""
+    - name: ROLLUP_FEE_THRESHOLD_DOWN
+      value: "0.9"
+    - name: ROLLUP_FEE_THRESHOLD_UP
+      value: "1.1"
+    - name: ROLLUP_DISABLE_TRANSFERS
+      value: "false"
+    - name: ROLLUP_POLL_INTERVAL
+      value: "500ms"
+    - name: ROLLUP_ENABLE_L2_GAS_POLLING
+      value: "true"
+    - name: ROLLUP_ENFORCE_FEES
+      value: "true"
+    - name: ROLLUP_GAS_PRICE_ORACLE_OWNER_ADDRESS
+      value: ""
+    - name: ETH1_L1_FEE_WALLET_ADDRESS
+      value: ""
+    - name: ROLLUP_MIN_L2_GAS_LIMIT
+      value: ""
+    - name: ROLLUP_TIMESTAMP_REFRESH
+      value: "5s"
+    - name: ETH1_CTC_DEPLOYMENT_HEIGHT
+      value: "8"
+    - name: RETRIES
+      value: "40"
+    - name: WS_PORT
+      value: "8546"
+    - name: IPC_DISABLE
+      value: "true"
+    - name: ETH1_CONFIRMATION_DEPTH
+      value: "0"
+    - name: BLOCK_SIGNER_PRIVATE_KEY
+      value: "6587ae678cf4fc9a33000cdbf9f35226b71dcc6a4684a31203241f9bcfd55d27"
+    - name: BLOCK_SIGNER_ADDRESS
+      value: "0x00000398232E2064F896018496b4b44b3D62751F"
+---
+apiVersion: stack.optimism-stacks.net/v1
+kind: BatchSubmitter
+metadata:
+  name: test-l1
+spec:
+  image: "ethereumoptimism/batch-submitter:latest"
+  l1_url: "http://test-l1-clique:8545"
+  l1_timeout_seconds: 60
+  l2_url: "http://test-l1-sequencer:8545"
+  l2_timeout_seconds: 600
+  deployer_url: "http://test-l1-deployer:8081"
+  deployer_timeout_seconds: 600
+  env:
+    - name: SEQUENCER_PRIVATE_KEY
+      value: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    - name: PROPOSER_PRIVATE_KEY
+      value: "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
+    - name: MAX_L1_TX_SIZE
+      value: "90000"
+    - name: MIN_L1_TX_SIZE
+      value: "32"
+    - name: MAX_TX_BATCH_COUNT
+      value: "50"
+    - name: MAX_STATE_BATCH_COUNT
+      value: "50"
+    - name: POLL_INTERVAL
+      value: "500"
+    - name: NUM_CONFIRMATIONS
+      value: "0"
+    - name: RESUBMISSION_TIMEOUT
+      value: "1"
+    - name: FINALITY_CONFIRMATIONS
+      value: "0"
+    - name: RUN_TX_BATCH_SUBMITTER
+      value: "true"
+    - name: RUN_STATE_BATCH_SUBMITTER
+      value: "true"
+    - name: MAX_BATCH_SUBMISSION_TIME
+      value: "0"
+    - name: SAFE_MINIMUM_ETHER_BALANCE
+      value: "0"
+    - name: CLEAR_PENDING_TXS
+      value: "false"
+    - name: RETRIES
+      value: "80"
+    - name: DEBUG
+      value: "info*,error*,warn*,debug*"
+---
+apiVersion: stack.optimism-stacks.net/v1
+kind: GasOracle
+metadata:
+  name: test-l1
+spec:
+  image: "mslipper/optimism-gas-oracle:latest"
+  l1_url: "http://test-l1-clique:8545"
+  l1_timeout_seconds: 60
+  l2_url: "http://test-l1-sequencer:8545"
+  l2_timeout_seconds: 600
+  env:
+    - name: GAS_PRICE_ORACLE_PRIVATE_KEY
+      value: "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba"
+    - name: GAS_PRICE_ORACLE_L1_CHAIN_ID
+      value: "777"
+    - name: GAS_PRICE_ORACLE_L2_CHAIN_ID
+      value: "420"
+    - name: GAS_PRICE_ORACLE_ENABLE_L1_BASE_FEE
+      value: "true"
+    - name: GAS_PRICE_ORACLE_ENABLE_L2_GAS_PRICE
+      value: "true"
+    - name: GAS_PRICE_ORACLE_L1_BASE_FEE_SIGNIFICANT_FACTOR
+      value: "0.1"
+    - name: GAS_PRICE_ORACLE_TRANSACTION_GAS_PRICE
+      value: "0"
+    - name: GAS_PRICE_ORACLE_LOG_LEVEL
+      value: "6"
+    - name: GAS_PRICE_ORACLE_FLOOR_PRICE
+      value: "10000"
+    - name: GAS_PRICE_ORACLE_EPOCH_LENGTH_SECONDS
+      value: "60"
+    - name: GAS_PRICE_ORACLE_TARGET_GAS_PER_SECOND
+      value: "38194444"
+    - name: GAS_PRICE_ORACLE_MAX_PERCENT_CHANGE_PER_EPOCH
+      value: "0.25"
+    - name: GAS_PRICE_ORACLE_AVERAGE_BLOCK_GAS_LIMIT_PER_EPOCH
+      value: "11000000"
+    - name: GAS_PRICE_ORACLE_SIGNIFICANT_FACTOR
+      value: "0.05"
+    - name: GAS_PRICE_ORACLE_GAS_PRICE_ORACLE_ADDRESS
+      value: "0x420000000000000000000000000000000000000F"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: test-l1-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  tls:
+    - secretName: optimism-stacks-tls
+  rules:
+    - host: test-l1-sequencer.optimism-stacks.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: test-l1-sequencer
+                port:
+                  number: 8545
