@@ -127,10 +127,14 @@ func (r *SequencerReconciler) labels() map[string]string {
 }
 
 func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.ConfigMap {
+	entrypoint := SequencerEntrypoint
+	if crd.Spec.OverrideEntrypoint != "" {
+		entrypoint = crd.Spec.OverrideEntrypoint
+	}
 	cfgMap := &corev1.ConfigMap{
 		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels()),
 		Data: map[string]string{
-			"entrypoint.sh": SequencerEntrypoint,
+			"entrypoint.sh": entrypoint,
 		},
 	}
 	ctrl.SetControllerReference(crd, cfgMap, r.Scheme)
@@ -327,6 +331,7 @@ func (r *SequencerReconciler) deploymentArgsHash(crd *stackv1.Sequencer) string 
 	for _, arg := range crd.Spec.AdditionalArgs {
 		h.Write([]byte(arg))
 	}
+	h.Write([]byte(crd.Spec.OverrideEntrypoint))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
