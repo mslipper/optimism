@@ -1,10 +1,10 @@
-import { expect } from './shared/setup'
-
 import { Contract, BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
+
+import { expect } from './shared/setup'
 import { OptimismEnv } from './shared/env'
 
-const traceToGasByOpcode = (structLogs, opcode) => {
+export const traceToGasByOpcode = (structLogs, opcode) => {
   let gas = 0
   const opcodes = []
   for (const log of structLogs) {
@@ -16,7 +16,7 @@ const traceToGasByOpcode = (structLogs, opcode) => {
   return gas
 }
 
-describe('Hard forks', () => {
+describe.only('Hard forks', () => {
   let env: OptimismEnv
   let SimpleStorage: Contract
   let SelfDestruction: Contract
