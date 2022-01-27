@@ -154,6 +154,8 @@ describe.only('Hard forks', () => {
             'debug_traceTransaction',
             [tx.hash, { overrides: { berlinBlock: tip.number + 10 } }]
           )
+          console.log('berlin trace', berlinTrace)
+          console.log('pre berlin trace', preBerlinTrace)
           // Updating to a zero value from a non zero value should becomes
           // more expensive due to this change being coupled with EIP-2929
           expect(berlinTrace.gas).to.be.gt(preBerlinTrace.gas)
