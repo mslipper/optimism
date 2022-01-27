@@ -58,15 +58,15 @@ concat_arg "--scc-fraud-proof-window" "SCC_FRAUD_PROOF_WINDOW"
 concat_arg "--num-deploy-confirmations" "NUM_DEPLOY_CONFIRMATIONS"
 concat_arg "--forked" "FORKED"
 
+echo "Cleaning out existing deployment folder."
+rm -rf "./deployments/$CONTRACTS_TARGET_NETWORK"
+
 echo "Deploying contracts. Deployment command:"
 echo "$DEPLOY_CMD"
 eval "$DEPLOY_CMD"
 
 echo "Building addresses.json."
 export ADDRESS_MANAGER_ADDRESS=$(cat "./deployments/$CONTRACTS_TARGET_NETWORK/Lib_AddressManager.json" | jq -r .address)
-
-echo "Cleaning out existing deployment folder."
-rm -rf "./deployments/$CONTRACTS_TARGET_NETWORK"
 
 # First, create two files. One of them contains a list of addresses, the other contains a list of contract names.
 find "./deployments/$CONTRACTS_TARGET_NETWORK" -maxdepth 1 -name '*.json' | xargs cat | jq -r '.address' > addresses.txt
