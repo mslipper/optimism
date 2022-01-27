@@ -154,7 +154,7 @@ describe.only('Hard forks', () => {
             'debug_traceTransaction',
             [tx.hash, { overrides: { berlinBlock: tip.number + 10 } }]
           )
-          console.log('berlin trace', JSON.stringify(berlinTrace.structLogs.map(l => ({
+          console.log('pre berlin trace', JSON.stringify(preBerlinTrace.structLogs.map(l => ({
             pc: l.pc,
             op: l.op,
             gas: l.gas,
