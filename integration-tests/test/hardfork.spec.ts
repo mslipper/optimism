@@ -154,12 +154,20 @@ describe.only('Hard forks', () => {
             'debug_traceTransaction',
             [tx.hash, { overrides: { berlinBlock: tip.number + 10 } }]
           )
-          console.log('pre berlin trace', JSON.stringify(preBerlinTrace.structLogs.map(l => ({
-            pc: l.pc,
-            op: l.op,
-            gas: l.gas,
-            gasCost: l.gasCost,
-          })), null, '  '))
+          console.log(JSON.stringify({
+            berlin: berlinTrace.structLogs.map(l => ({
+                pc: l.pc,
+                op: l.op,
+                gas: l.gas,
+                gasCost: l.gasCost,
+              })),
+            preBerlin: preBerlinTrace.structLogs.map(l => ({
+              pc: l.pc,
+              op: l.op,
+              gas: l.gas,
+              gasCost: l.gasCost,
+            })),
+          }, null, '  '))
           // Updating to a zero value from a non zero value should becomes
           // more expensive due to this change being coupled with EIP-2929
           expect(berlinTrace.gas).to.be.gt(preBerlinTrace.gas)
