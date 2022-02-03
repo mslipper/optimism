@@ -138,9 +138,7 @@ func (r *GasOracleReconciler) deployment(crd *stackv1.GasOracle) *appsv1.Deploym
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": "gas-oracle",
-				},
+				MatchLabels: r.labels(crd),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

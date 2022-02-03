@@ -233,9 +233,7 @@ func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.Statef
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": "sequencer",
-				},
+				MatchLabels: r.labels(crd),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

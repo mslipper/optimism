@@ -228,9 +228,7 @@ func (r *BatchSubmitterReconciler) statefulSet(crd *stackv1.BatchSubmitter) *app
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &v1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": "batch-submitter",
-				},
+				MatchLabels: r.labels(crd),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{

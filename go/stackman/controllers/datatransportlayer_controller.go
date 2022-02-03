@@ -247,9 +247,7 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &v1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": "dtl",
-				},
+				MatchLabels: r.labels(crd),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
