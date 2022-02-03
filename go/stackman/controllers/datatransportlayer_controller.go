@@ -119,9 +119,6 @@ func (r *DataTransportLayerReconciler) Reconcile(ctx context.Context, req ctrl.R
 func (r *DataTransportLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&stackv1.DataTransportLayer{}).
-		Owns(&corev1.ConfigMap{}).
-		Owns(&appsv1.Deployment{}).
-		Owns(&corev1.Service{}).
 		Complete(r)
 }
 
@@ -162,6 +159,8 @@ func (r *DataTransportLayerReconciler) entrypointsCfgMap(crd *stackv1.DataTransp
 func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLayer) *appsv1.StatefulSet {
 	replicas := int32(1)
 	defaultMode := int32(0o777)
+	om := ObjectMeta(crd.ObjectMeta, "dtl", r.labels(crd))
+	om.Labels["args_hash"] = r.argsHash(crd)
 	initContainers := []corev1.Container{
 		{
 			Name:            "wait-for-l1",
@@ -243,7 +242,7 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 		})
 	}
 	statefulSet := &appsv1.StatefulSet{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl", r.labels(crd)),
+		ObjectMeta: om,
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &v1.LabelSelector{
