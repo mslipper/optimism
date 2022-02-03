@@ -102,5 +102,5 @@ import { makeL2GenesisFile } from '../src/make-genesis'
     berlinBlock,
   })
 
-  fs.writeFileSync(outfile, JSON.stringify(genesis, null, 4))
+  fs.writeFileSync('./genesis.json', JSON.stringify(genesis, null, 4))
 })()

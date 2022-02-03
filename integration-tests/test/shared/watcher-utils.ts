@@ -55,6 +55,7 @@ export const waitForXDomainTransaction = async (
   tx = await tx
   // get the receipt and the full transaction
   const receipt = await tx.wait()
+  console.log('receipt', receipt)
   const fullTx = await src.provider.getTransaction(tx.hash)
 
   // get the message hash which was created on the SentMessage
