@@ -141,11 +141,16 @@ func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.
 	entrypoint := SequencerEntrypoint
 	if crd.Spec.OverrideEntrypoint != "" {
 		entrypoint = crd.Spec.OverrideEntrypoint
+
 	}
-	om := ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels(crd))
+	om := ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels())
 	om.Labels["args_hash"] = r.entrypointsArgsHash(crd)
 	cfgMap := &corev1.ConfigMap{
+<<<<<<< HEAD
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels(crd)),
+=======
 		ObjectMeta: om,
+>>>>>>> feat/stackman-operator-override-entrypoint
 		Data: map[string]string{
 			"entrypoint.sh": entrypoint,
 		},
@@ -157,8 +162,13 @@ func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.
 func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.StatefulSet {
 	replicas := int32(1)
 	defaultMode := int32(0o777)
+<<<<<<< HEAD
 	om := ObjectMeta(crd.ObjectMeta, "sequencer", r.labels(crd))
+	om.Labels["args_hash"] = r.deploymentArgsHash(crd)
+=======
+	om := ObjectMeta(crd.ObjectMeta, "sequencer", r.labels())
 	om.Labels["args_hash"] = r.statefulSetArgsHash(crd)
+>>>>>>> feat/stackman-operator-override-entrypoint
 	initContainers := []corev1.Container{
 		{
 			Name:            "wait-for-dtl",
@@ -304,7 +314,7 @@ func (r *SequencerReconciler) service(crd *stackv1.Sequencer) *corev1.Service {
 		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer", r.labels(crd)),
 		Spec: corev1.ServiceSpec{
 			Selector: r.labels(crd),
-			Type:     corev1.ServiceTypeClusterIP,
+			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{
 					Name: "rpc",
