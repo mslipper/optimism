@@ -279,7 +279,7 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 							},
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "api",
+									Name:          "http",
 									ContainerPort: 7878,
 								},
 								{
@@ -316,9 +316,11 @@ func (r *DataTransportLayerReconciler) service(crd *stackv1.DataTransportLayer) 
 			Ports: []corev1.ServicePort{
 				{
 					Port: 3000,
+					Name: "metrics",
 				},
 				{
 					Port: 7878,
+					Name: "http",
 				},
 			},
 		},
