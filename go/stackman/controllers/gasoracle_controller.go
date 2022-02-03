@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -99,9 +100,9 @@ func (r *GasOracleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *GasOracleReconciler) labels() map[string]string {
+func (r *GasOracleReconciler) labels(crd *stackv1.GasOracle) map[string]string {
 	return map[string]string{
-		"app": "gas-oracle",
+		"app": fmt.Sprintf("%s-gas-oracle", crd.Name),
 	}
 }
 
@@ -120,7 +121,7 @@ func (r *GasOracleReconciler) deploymentArgsHash(crd *stackv1.GasOracle) string 
 
 func (r *GasOracleReconciler) deployment(crd *stackv1.GasOracle) *appsv1.Deployment {
 	replicas := int32(1)
-	labels := r.labels()
+	labels := r.labels(crd)
 	labels["args_hash"] = r.deploymentArgsHash(crd)
 	baseEnv := []corev1.EnvVar{
 		{
@@ -143,7 +144,7 @@ func (r *GasOracleReconciler) deployment(crd *stackv1.GasOracle) *appsv1.Deploym
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: r.labels(),
+					Labels: r.labels(crd),
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyAlways,

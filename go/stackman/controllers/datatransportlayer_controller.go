@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -124,9 +125,9 @@ func (r *DataTransportLayerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func (r *DataTransportLayerReconciler) labels() map[string]string {
+func (r *DataTransportLayerReconciler) labels(crd *stackv1.DataTransportLayer) map[string]string {
 	return map[string]string{
-		"app": "dtl",
+		"app": fmt.Sprintf("%s-dtl", crd.Name),
 	}
 }
 
@@ -149,7 +150,7 @@ func (r *DataTransportLayerReconciler) argsHash(crd *stackv1.DataTransportLayer)
 
 func (r *DataTransportLayerReconciler) entrypointsCfgMap(crd *stackv1.DataTransportLayer) *corev1.ConfigMap {
 	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl-entrypoints", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl-entrypoints", r.labels(crd)),
 		Data: map[string]string{
 			"entrypoint.sh": DTLEntrypoint,
 		},
@@ -242,7 +243,7 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 		})
 	}
 	statefulSet := &appsv1.StatefulSet{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl", r.labels(crd)),
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &v1.LabelSelector{
@@ -252,7 +253,7 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
-					Labels: r.labels(),
+					Labels: r.labels(crd),
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy:  corev1.RestartPolicyAlways,
@@ -311,11 +312,10 @@ func (r *DataTransportLayerReconciler) statefulSet(crd *stackv1.DataTransportLay
 
 func (r *DataTransportLayerReconciler) service(crd *stackv1.DataTransportLayer) *corev1.Service {
 	service := &corev1.Service{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "dtl", r.labels(crd)),
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "dtl",
-			},
+			Selector: r.labels(crd),
+			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{
 					Port: 3000,

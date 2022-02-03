@@ -120,15 +120,15 @@ func (r *SequencerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *SequencerReconciler) labels() map[string]string {
+func (r *SequencerReconciler) labels(crd *stackv1.Sequencer) map[string]string {
 	return map[string]string{
-		"app": "sequencer",
+		"app": fmt.Sprintf("%s-sequencer", crd.Name),
 	}
 }
 
 func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.ConfigMap {
 	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels(crd)),
 		Data: map[string]string{
 			"entrypoint.sh": SequencerEntrypoint,
 		},
@@ -140,7 +140,7 @@ func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.
 func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.StatefulSet {
 	replicas := int32(1)
 	defaultMode := int32(0o777)
-	om := ObjectMeta(crd.ObjectMeta, "sequencer", r.labels())
+	om := ObjectMeta(crd.ObjectMeta, "sequencer", r.labels(crd))
 	om.Labels["args_hash"] = r.deploymentArgsHash(crd)
 	initContainers := []corev1.Container{
 		{
@@ -239,7 +239,7 @@ func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.Statef
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: r.labels(),
+					Labels: r.labels(crd),
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy:  corev1.RestartPolicyAlways,
@@ -286,11 +286,9 @@ func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.Statef
 
 func (r *SequencerReconciler) service(crd *stackv1.Sequencer) *corev1.Service {
 	service := &corev1.Service{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer", r.labels(crd)),
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "sequencer",
-			},
+			Selector: r.labels(crd),
 			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{

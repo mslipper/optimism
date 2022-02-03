@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -119,15 +120,15 @@ func (r *BatchSubmitterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *BatchSubmitterReconciler) labels() map[string]string {
+func (r *BatchSubmitterReconciler) labels(crd *stackv1.BatchSubmitter) map[string]string {
 	return map[string]string{
-		"app": "batch-submitter",
+		"app": fmt.Sprintf("%s-batch-submitter", crd.Name),
 	}
 }
 
 func (r *BatchSubmitterReconciler) entrypointsCfgMap(crd *stackv1.BatchSubmitter) *corev1.ConfigMap {
 	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "batch-submitter-entrypoints", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "batch-submitter-entrypoints", r.labels(crd)),
 		Data: map[string]string{
 			"entrypoint.sh": BatchSubmitterEntrypoint,
 		},
@@ -154,7 +155,7 @@ func (r *BatchSubmitterReconciler) statefulSetArgsHash(crd *stackv1.BatchSubmitt
 func (r *BatchSubmitterReconciler) statefulSet(crd *stackv1.BatchSubmitter) *appsv1.StatefulSet {
 	replicas := int32(1)
 	defaultMode := int32(0o777)
-	labels := r.labels()
+	labels := r.labels(crd)
 	labels["args_hash"] = r.statefulSetArgsHash(crd)
 	initContainers := []corev1.Container{
 		{
@@ -233,7 +234,7 @@ func (r *BatchSubmitterReconciler) statefulSet(crd *stackv1.BatchSubmitter) *app
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
-					Labels: r.labels(),
+					Labels: r.labels(crd),
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy:  corev1.RestartPolicyAlways,
@@ -289,11 +290,10 @@ func (r *BatchSubmitterReconciler) statefulSet(crd *stackv1.BatchSubmitter) *app
 
 func (r *BatchSubmitterReconciler) service(crd *stackv1.BatchSubmitter) *corev1.Service {
 	service := &corev1.Service{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "batch-submitter", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "batch-submitter", r.labels(crd)),
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "batch-submitter",
-			},
+			Selector: r.labels(crd),
+			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{
 				{
 					Name: "metrics",
