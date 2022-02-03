@@ -68,13 +68,24 @@ func (r *SequencerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	entriesCfgMap := &corev1.ConfigMap{}
 	created, err := GetOrCreateResource(ctx, r, func() client.Object {
 		return r.entrypointsCfgMap(crd)
-	}, ObjectNamespacedName(crd.ObjectMeta, "sequencer-entrypoints"), &corev1.ConfigMap{})
+	}, ObjectNamespacedName(crd.ObjectMeta, "sequencer-entrypoints"), entriesCfgMap)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 	if created {
+		return ctrl.Result{Requeue: true}, nil
+	}
+	entriesArgsHash := r.entrypointsArgsHash(crd)
+	if entriesCfgMap.Labels["args_hash"] != entriesArgsHash {
+		err := r.Update(ctx, r.entrypointsCfgMap(crd))
+		if err != nil {
+			lgr.Error(err, "error updating sequencer config map")
+			return ctrl.Result{}, err
+		}
+
 		return ctrl.Result{Requeue: true}, nil
 	}
 
@@ -89,8 +100,8 @@ func (r *SequencerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	argsHash := r.deploymentArgsHash(crd)
-	if statefulSet.Labels["args_hash"] != argsHash {
+	ssArgsHash := r.statefulSetArgsHash(crd)
+	if statefulSet.Labels["args_hash"] != ssArgsHash {
 		err := r.Update(ctx, r.statefulSet(crd))
 		if err != nil {
 			lgr.Error(err, "error updating sequencer statefulSet")
@@ -127,10 +138,17 @@ func (r *SequencerReconciler) labels(crd *stackv1.Sequencer) map[string]string {
 }
 
 func (r *SequencerReconciler) entrypointsCfgMap(crd *stackv1.Sequencer) *corev1.ConfigMap {
+	entrypoint := SequencerEntrypoint
+	if crd.Spec.OverrideEntrypoint != "" {
+		entrypoint = crd.Spec.OverrideEntrypoint
+
+	}
+	om := ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels())
+	om.Labels["args_hash"] = r.entrypointsArgsHash(crd)
 	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "sequencer-entrypoints", r.labels(crd)),
+		ObjectMeta: om,
 		Data: map[string]string{
-			"entrypoint.sh": SequencerEntrypoint,
+			"entrypoint.sh": entrypoint,
 		},
 	}
 	ctrl.SetControllerReference(crd, cfgMap, r.Scheme)
@@ -141,7 +159,7 @@ func (r *SequencerReconciler) statefulSet(crd *stackv1.Sequencer) *appsv1.Statef
 	replicas := int32(1)
 	defaultMode := int32(0o777)
 	om := ObjectMeta(crd.ObjectMeta, "sequencer", r.labels(crd))
-	om.Labels["args_hash"] = r.deploymentArgsHash(crd)
+	om.Labels["args_hash"] = r.statefulSetArgsHash(crd)
 	initContainers := []corev1.Container{
 		{
 			Name:            "wait-for-dtl",
@@ -304,7 +322,7 @@ func (r *SequencerReconciler) service(crd *stackv1.Sequencer) *corev1.Service {
 	return service
 }
 
-func (r *SequencerReconciler) deploymentArgsHash(crd *stackv1.Sequencer) string {
+func (r *SequencerReconciler) statefulSetArgsHash(crd *stackv1.Sequencer) string {
 	h := md5.New()
 	h.Write([]byte(crd.Spec.Image))
 	h.Write([]byte(crd.Spec.L1URL))
@@ -323,6 +341,13 @@ func (r *SequencerReconciler) deploymentArgsHash(crd *stackv1.Sequencer) string 
 	for _, arg := range crd.Spec.AdditionalArgs {
 		h.Write([]byte(arg))
 	}
+	h.Write([]byte(crd.Spec.OverrideEntrypoint))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func (r *SequencerReconciler) entrypointsArgsHash(crd *stackv1.Sequencer) string {
+	h := md5.New()
+	h.Write([]byte(crd.Spec.OverrideEntrypoint))
 	return hex.EncodeToString(h.Sum(nil))
 }
 

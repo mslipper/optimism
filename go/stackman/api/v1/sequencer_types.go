@@ -39,6 +39,7 @@ type SequencerSpec struct {
 	DataPVC                *PVCConfig      `json:"data_pvc,omitempty"`
 	Env                    []corev1.EnvVar `json:"env,omitempty"`
 	AdditionalArgs         []string        `json:"additional_args,omitempty"`
+	OverrideEntrypoint     string          `json:"override_entrypoint,omitempty"`
 }
 
 // SequencerStatus defines the observed state of Sequencer
