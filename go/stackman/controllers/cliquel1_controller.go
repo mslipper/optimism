@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -143,9 +144,7 @@ func (r *CliqueL1Reconciler) argsHash(crd *stackv1.CliqueL1) string {
 
 func (r *CliqueL1Reconciler) entrypointsCfgMap(crd *stackv1.CliqueL1) *corev1.ConfigMap {
 	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "clique-entrypoints", map[string]string{
-			"app": "clique",
-		}),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "clique-entrypoints", r.labels(crd)),
 		Data: map[string]string{
 			"entrypoint.sh": CliqueEntrypoint,
 		},
@@ -154,15 +153,15 @@ func (r *CliqueL1Reconciler) entrypointsCfgMap(crd *stackv1.CliqueL1) *corev1.Co
 	return cfgMap
 }
 
-func (r *CliqueL1Reconciler) labels() map[string]string {
+func (r *CliqueL1Reconciler) labels(crd *stackv1.CliqueL1) map[string]string {
 	return map[string]string{
-		"app": "clique",
+		"app": fmt.Sprintf("%s-clique", crd.Name),
 	}
 }
 
 func (r *CliqueL1Reconciler) statefulSet(crd *stackv1.CliqueL1) *appsv1.StatefulSet {
 	replicas := int32(1)
-	om := ObjectMeta(crd.ObjectMeta, "clique", r.labels())
+	om := ObjectMeta(crd.ObjectMeta, "clique", r.labels(crd))
 	om.Labels["args_hash"] = r.argsHash(crd)
 	defaultMode := int32(0o777)
 	volumes := []corev1.Volume{
@@ -216,11 +215,11 @@ func (r *CliqueL1Reconciler) statefulSet(crd *stackv1.CliqueL1) *appsv1.Stateful
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: r.labels(),
+				MatchLabels: r.labels(crd),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: r.labels(),
+					Labels: r.labels(crd),
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyAlways,
@@ -277,11 +276,9 @@ func (r *CliqueL1Reconciler) statefulSet(crd *stackv1.CliqueL1) *appsv1.Stateful
 
 func (r *CliqueL1Reconciler) service(crd *stackv1.CliqueL1) *corev1.Service {
 	service := &corev1.Service{
-		ObjectMeta: ObjectMeta(crd.ObjectMeta, "clique", r.labels()),
+		ObjectMeta: ObjectMeta(crd.ObjectMeta, "clique", r.labels(crd)),
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "clique",
-			},
+			Selector: r.labels(crd),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "rpc",
