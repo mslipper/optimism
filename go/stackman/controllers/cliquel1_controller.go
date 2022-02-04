@@ -256,10 +256,10 @@ func (r *CliqueL1Reconciler) statefulSet(crd *stackv1.CliqueL1) *appsv1.Stateful
 							},
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: 8085,
+									ContainerPort: 8545,
 								},
 								{
-									ContainerPort: 8086,
+									ContainerPort: 8546,
 								},
 							},
 						},
