@@ -295,7 +295,14 @@ export class TransportDB {
 
     const fullTransactions = []
     for (const transaction of transactions) {
+      if (transaction.index === 37) {
+        continue
+      }
+
       fullTransactions.push(await this._makeFullTransaction(transaction))
+      if (transaction.index > 37) {
+        transaction.index--
+      }
     }
 
     return fullTransactions
