@@ -295,6 +295,8 @@ export class TransportDB {
 
     const fullTransactions = []
     for (const transaction of transactions) {
+      console.log(transaction)
+      console.log(transaction.index, typeof transaction.index)
       if (transaction.index === 37) {
         continue
       }
