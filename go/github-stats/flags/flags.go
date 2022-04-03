@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const envVarPrefix = "GH_STATS"
+const envVarPrefix = "GH_STATS_"
 
 func prefixEnvVar(name string) string {
 	return envVarPrefix + name
