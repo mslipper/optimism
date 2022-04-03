@@ -44,8 +44,9 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 	allDone.Add(1)
 
 	var isErr int32
-	var total float64
-	var count float64
+	var totalResolutionTime float64
+	var totalDiffSizes float64
+	var prCount float64
 
 	go func() {
 		var i int
@@ -54,7 +55,7 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 				reviewCount[*review.User.Login] += 1
 			}
 			i++
-			log.Info("processed PR", "current", i, "total", len(allPrs))
+			log.Info("processed PR", "current", i, "totalResolutionTime", len(allPrs))
 		}
 
 		allDone.Done()
@@ -64,12 +65,14 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 		sem <- struct{}{}
 
 		if pr.ClosedAt != nil {
-			total += pr.GetClosedAt().Sub(pr.GetCreatedAt()).Seconds()
-			count++
+			totalResolutionTime += pr.GetClosedAt().Sub(pr.GetCreatedAt()).Seconds()
+			prCount++
 		}
 
+		totalDiffSizes += float64(pr.GetAdditions() + pr.GetDeletions())
+
 		go func(pr *github.PullRequest) {
-			defer func() { <- sem }()
+			defer func() { <-sem }()
 
 			reviews, _, err := gh.PullRequests.ListReviews(ctx, org, repo, *pr.Number, &github.ListOptions{
 				PerPage: 25,
@@ -93,7 +96,8 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 		return errors.New("an error occurred fetching reviews, check the logs for the source")
 	}
 
-	PRMeanResolutionTimeSecs.Set(total / count)
+	PRMeanResolutionTimeSecs.Set(totalResolutionTime / prCount)
+	PRMeanDiffSizeLines.Set(totalDiffSizes / prCount)
 	for reviewer, count := range reviewCount {
 		PRReviewsCount.WithLabelValues(reviewer).Set(count)
 	}
