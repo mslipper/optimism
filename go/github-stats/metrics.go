@@ -15,7 +15,7 @@ var (
 
 	PRMeanDiffSizeLines = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: MetricsNamespace,
-		Name: "pr_mean_diff_size_lines",
+		Name:      "pr_mean_diff_size_lines",
 	})
 
 	PRReviewsCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
