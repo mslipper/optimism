@@ -5,7 +5,7 @@ RUN apk add --no-cache make gcc musl-dev linux-headers git jq bash
 COPY go.mod go.sum /go/github-stats/
 WORKDIR /go/github-stats
 RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs -n 1 go get
-COPY ./go/github-stats/ ./
+COPY . ./
 RUN make github-stats
 
 FROM alpine:3.13
