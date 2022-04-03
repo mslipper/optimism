@@ -14,6 +14,11 @@ const (
 	MaxPRs = 100
 )
 
+type dataBag struct {
+	pr      *github.PullRequest
+	reviews []*github.PullRequestReview
+}
+
 func CalculateStats(gh *github.Client, org, repo string) error {
 	ctx := context.Background()
 
@@ -38,8 +43,8 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 	}
 
 	reviewCount := make(map[string]float64)
-	sem := make(chan struct{}, 4)
-	revsCh := make(chan []*github.PullRequestReview)
+	sem := make(chan struct{}, 8)
+	bagCh := make(chan *dataBag)
 	var allDone sync.WaitGroup
 	allDone.Add(1)
 
@@ -50,12 +55,15 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 
 	go func() {
 		var i int
-		for reviews := range revsCh {
-			for _, review := range reviews {
+		for bag := range bagCh {
+			for _, review := range bag.reviews {
 				reviewCount[*review.User.Login] += 1
 			}
+
+			totalDiffSizes += float64(bag.pr.GetAdditions() + bag.pr.GetDeletions())
+
 			i++
-			log.Info("processed PR", "current", i, "totalResolutionTime", len(allPrs))
+			log.Info("processed PR", "current", i, "total", len(allPrs))
 		}
 
 		allDone.Done()
@@ -69,10 +77,19 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 			prCount++
 		}
 
-		totalDiffSizes += float64(pr.GetAdditions() + pr.GetDeletions())
-
 		go func(pr *github.PullRequest) {
 			defer func() { <-sem }()
+
+			if atomic.LoadInt32(&isErr) == 1 {
+				return
+			}
+
+			fullPr, _, err := gh.PullRequests.Get(ctx, org, repo, *pr.Number)
+			if err != nil {
+				log.Error("error fetching full PR attributes", "err", err)
+				atomic.StoreInt32(&isErr, 1)
+				return
+			}
 
 			reviews, _, err := gh.PullRequests.ListReviews(ctx, org, repo, *pr.Number, &github.ListOptions{
 				PerPage: 25,
@@ -83,13 +100,16 @@ func CalculateStats(gh *github.Client, org, repo string) error {
 				return
 			}
 
-			revsCh <- reviews
+			bagCh <- &dataBag{
+				pr:      fullPr,
+				reviews: reviews,
+			}
 		}(pr)
 	}
 	for i := 0; i < cap(sem); i++ {
 		sem <- struct{}{}
 	}
-	close(revsCh)
+	close(bagCh)
 	allDone.Wait()
 
 	if isErr == 1 {
