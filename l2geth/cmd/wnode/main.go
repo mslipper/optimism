@@ -230,6 +230,8 @@ func initialize() {
 			utils.Fatalf("Failed to set PoW: %s", err)
 		}
 	}
+	
+	fmt.Println("honk")
 
 	if uint32(*argMaxSize) != whisper.DefaultMaxMessageSize {
 		err := shh.SetMaxMessageSize(uint32(*argMaxSize))
