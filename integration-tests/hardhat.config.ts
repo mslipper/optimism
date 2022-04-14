@@ -14,6 +14,10 @@ const config: HardhatUserConfig = {
     optimism: {
       url: process.env.L2_URL || 'http://localhost:8545',
     },
+    goerli: {
+      url: process.env.L2_URL,
+      accounts: [process.env.PRIVATE_KEY]
+    },
   },
   mocha: {
     timeout: envConfig.MOCHA_TIMEOUT,
