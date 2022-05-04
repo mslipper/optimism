@@ -974,6 +974,5 @@ func makeSwap(size int64) executionFunc {
 
 // OVM opcodes
 func opL1BlockNumber(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	stack.push(math.U256(interpreter.intPool.get().Set(interpreter.evm.L1BlockNumber)))
-	return nil, nil
+	panic("damn it")
 }
