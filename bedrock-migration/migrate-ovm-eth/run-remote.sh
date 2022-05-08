@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ssh archi-local bas <<EOF
+ssh archi-local bash <<EOF
 cd /home/ubuntu/dev/optimism
 git fetch
 git checkout migrator
