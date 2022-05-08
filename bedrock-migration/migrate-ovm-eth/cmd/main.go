@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -57,11 +56,7 @@ func main() {
 			continue
 		}
 		preimage := st.GetKey(iter.LeafKey())
-		fmt.Sprintf("%x|%x|%x", preimage,iter.LeafKey(), iter.LeafBlob())
-		fmt.Println(hex.EncodeToString(preimage))
-		fmt.Println(hex.EncodeToString(iter.LeafKey()))
-		fmt.Println(hex.EncodeToString(iter.LeafBlob()))
-		return
+		fmt.Printf("%x|%x|%x\n", preimage,iter.LeafKey(), iter.LeafBlob())
 	}
 }
 
