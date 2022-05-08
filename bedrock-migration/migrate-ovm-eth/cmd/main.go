@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -58,7 +59,9 @@ func main() {
 			log.Crit("error in iterator", "err", iter.Error())
 		}
 
-		addr := strings.Split(string(iter.Key()), "-")[2]
+		fmt.Println(string(iter.Key()))
+
+		addr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
 		balKey := iter.Value()
 		res, err := st.TryGet(balKey[:])
 		if err != nil {
@@ -68,7 +71,7 @@ func main() {
 		if err != nil {
 			log.Crit("error decoding storage trie value", "err", err)
 		}
-		fmt.Printf("%s,%s", addr, new(big.Int).SetBytes(balBytes).String())
+		fmt.Printf("%s,%s\n", addr, new(big.Int).SetBytes(balBytes).String())
 	}
 }
 
