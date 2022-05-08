@@ -44,6 +44,8 @@ func main() {
 		log.Crit("error opening storage trie", "err", err)
 	}
 
+	log.Info("opened storage trie")
+
 	iter := st.NodeIterator(nil)
 
 	for iter.Next(true) {
