@@ -27,11 +27,10 @@ func main() {
 
 	log.Info("starting migrator", "db_path", args[1])
 
-	db, err := rawdb.NewLevelDBDatabaseWithFreezer(
-		args[1],
+	db, err := rawdb.NewLevelDBDatabase(
+		filepath.Join(args[1], "geth", "chaindata"),
 		0,
 		0,
-		filepath.Join(args[1], "freezer"),
 		"",
 		true,
 	)
