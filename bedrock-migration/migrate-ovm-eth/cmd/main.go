@@ -68,6 +68,7 @@ func main() {
 		_, balBytes, _, err := rlp.Split(res)
 		if err != nil {
 			fmt.Println(hex.EncodeToString(res))
+			fmt.Println(addr)
 			log.Crit("error decoding storage trie value", "err", err)
 		}
 		fmt.Printf("%s,%s\n", addr, new(big.Int).SetBytes(balBytes).String())
