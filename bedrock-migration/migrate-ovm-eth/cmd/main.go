@@ -60,6 +60,7 @@ func main() {
 		fmt.Println(hex.EncodeToString(preimage))
 		fmt.Println(hex.EncodeToString(iter.LeafKey()))
 		fmt.Println(hex.EncodeToString(iter.LeafBlob()))
+		return
 	}
 }
 
