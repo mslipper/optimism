@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -9,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/sha3"
+	"math/big"
 	"os"
 	"path/filepath"
 )
@@ -55,7 +55,7 @@ func main() {
 	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
 	fmt.Println(balKey)
 	res, err := st.TryGet(balKey[:])
-	fmt.Println(hex.EncodeToString(res))
+	fmt.Println(new(big.Int).SetBytes(res).String())
 	fmt.Println(err)
 
 	for iter.Next(true) {
