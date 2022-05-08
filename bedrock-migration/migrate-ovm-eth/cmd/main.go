@@ -65,7 +65,7 @@ func main() {
 		if err != nil {
 			log.Crit("error reading storage trie", "err", err)
 		}
-		if len(res) > 0 {
+		if len(res) == 0 {
 			log.Warn("address has zero length state", "addr", addr)
 			continue
 		}
