@@ -25,13 +25,13 @@ func main() {
 		log.Crit("must pass in an input and output file")
 	}
 
-	log.Info("starting migrator", "db_path", args[0])
+	log.Info("starting migrator", "db_path", args[1])
 
 	db, err := rawdb.NewLevelDBDatabaseWithFreezer(
-		args[0],
+		args[1],
 		0,
 		0,
-		filepath.Join(args[0], "freezer"),
+		filepath.Join(args[1], "freezer"),
 		"",
 		true,
 	)
