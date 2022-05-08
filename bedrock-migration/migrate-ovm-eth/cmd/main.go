@@ -17,7 +17,7 @@ import (
 
 var (
 	OVMETHAddress    = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
-	Block7412000Root = common.HexToHash("0x6894615eaf0954b58ad66adc077449e9ad4885824ee80def7a8a7873bfdade19")
+	Block7412000Root = common.HexToHash("0x5d4e7f7332568a6063a268db1bb518cbd5cd62e3f1933ee078a9c4a7c44b28c0")
 )
 
 func main() {
@@ -66,7 +66,7 @@ func main() {
 		}
 		_, balBytes, _, err := rlp.Split(res)
 		if err != nil {
-			log.Crit("error decoding storage trie", "err", err)
+			log.Crit("error decoding storage trie value", "err", err)
 		}
 		fmt.Printf("%s,%s", addr, new(big.Int).SetBytes(balBytes).String())
 	}
