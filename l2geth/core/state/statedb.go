@@ -895,7 +895,7 @@ func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addre
 
 func (s *StateDB) RegisterAddrPreimage(addr common.Address, key common.Hash) {
 	err := s.db.(*cachingDB).db.DiskDB().Put(
-		append([]byte("addr-primage-"), addr.Bytes()...),
+		append([]byte("addr-preimage-"), addr.Bytes()...),
 		key[:],
 	)
 	if err != nil {
