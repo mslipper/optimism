@@ -7,4 +7,5 @@ git checkout migrator
 git pull
 cd bedrock-migration/migrate-ovm-eth
 docker build -t mslipper/migrator:latest .
+docker run -v op-replica_geth:/geth mslipper/migrator:latest migrate /geth dummy
 EOF

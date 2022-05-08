@@ -25,6 +25,8 @@ func main() {
 		log.Crit("must pass in an input and output file")
 	}
 
+	log.Info("starting migrator", "db_path", args[0])
+
 	db, err := rawdb.NewLevelDBDatabaseWithFreezer(
 		args[0],
 		0,
