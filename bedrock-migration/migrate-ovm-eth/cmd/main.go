@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-isatty"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 var (
 	OVMETHAddress = common.HexToAddress("0x4200000000000000000000000000000000000006")
+	Block7412400Root = common.HexToHash("0xd4a9d6b2446a3153caaa4189c327def0673f85609c2c277befa0860b68b8d6cd")
 )
 
 func main() {
@@ -39,10 +41,23 @@ func main() {
 	}
 
 	stateDB := state.NewDatabase(db)
+
+	accountDB, err := stateDB.OpenTrie(Block7412400Root)
+	if err != nil {
+		log.Crit("error opening account trie", "err", err)
+	}
+	entry, err := accountDB.TryGet(crypto.Keccak256Hash(OVMETHAddress[:]).Bytes())
+	if err != nil {
+		log.Crit("error readying account state", "err", err)
+	}
+	fmt.Println(entry)
+
 	st, err := stateDB.OpenStorageTrie(OVMETHAddress.Hash(), common.Hash{})
 	if err != nil {
 		log.Crit("error opening storage trie", "err", err)
 	}
+
+
 
 	log.Info("opened storage trie")
 
