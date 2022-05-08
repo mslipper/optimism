@@ -52,7 +52,7 @@ func main() {
 
 	iter := st.NodeIterator(nil)
 	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
-	stBal := stateDB.GetState(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"), balKey)
+	stBal := stateDB.GetState(OVMETHAddress, balKey)
 	fmt.Println(balKey)
 	res, err := st.TryGet(balKey[:])
 	fmt.Println(stBal)
