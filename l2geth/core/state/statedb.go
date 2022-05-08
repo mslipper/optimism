@@ -246,6 +246,7 @@ func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 		// NOTE: We may remove this feature in a future release.
 		key := GetOVMBalanceKey(addr)
 		bal := s.GetState(dump.OvmEthAddress, key)
+		s.RegisterAddrPreimage(addr, key)
 		return bal.Big()
 	} else {
 		stateObject := s.getStateObject(addr)
@@ -382,6 +383,7 @@ func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 		bal := value.Big()
 		bal = bal.Add(bal, amount)
 		s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		s.RegisterAddrPreimage(addr, key)
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
@@ -402,6 +404,7 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 		bal := value.Big()
 		bal = bal.Sub(bal, amount)
 		s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		s.RegisterAddrPreimage(addr, key)
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
@@ -415,6 +418,7 @@ func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 		// Mutate the storage slot inside of OVM_ETH to change balances.
 		key := GetOVMBalanceKey(addr)
 		s.SetState(dump.OvmEthAddress, key, common.BigToHash(amount))
+		s.RegisterAddrPreimage(addr, key)
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
