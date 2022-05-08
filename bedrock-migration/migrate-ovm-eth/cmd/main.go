@@ -50,8 +50,7 @@ func main() {
 			continue
 		}
 
-		st.GetKey()
-
 		fmt.Println(hex.EncodeToString(iter.LeafKey()))
+		fmt.Println(hex.EncodeToString(iter.LeafBlob()))
 	}
 }
