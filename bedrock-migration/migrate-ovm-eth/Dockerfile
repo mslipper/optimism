@@ -2,8 +2,9 @@ FROM golang:1.18.0-alpine3.15 as builder
 
 RUN apk add --no-cache make gcc musl-dev linux-headers git
 
-COPY ./cmd /app/cmd
 COPY Makefile /app/Makefile
+COPY go.mod /app/go.mod
+COPY ./cmd /app/cmd
 
 WORKDIR /app
 RUN make migrate
