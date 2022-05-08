@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -51,12 +52,19 @@ func main() {
 
 	iter := st.NodeIterator(nil)
 
+	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
+	fmt.Println(balKey)
+	res, err := st.TryGet(balKey[:])
+	fmt.Println(hex.EncodeToString(res))
+	fmt.Println(err)
+
 	for iter.Next(true) {
 		if !iter.Leaf() {
 			continue
 		}
 		preimage := st.GetKey(iter.LeafKey())
 		fmt.Printf("%x|%x|%x\n", preimage,iter.LeafKey(), iter.LeafBlob())
+		return
 	}
 }
 
