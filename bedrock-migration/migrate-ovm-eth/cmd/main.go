@@ -56,7 +56,8 @@ func main() {
 		if !iter.Leaf() {
 			continue
 		}
-
+		preimage := st.GetKey(iter.LeafKey())
+		fmt.Println(hex.EncodeToString(preimage))
 		fmt.Println(hex.EncodeToString(iter.LeafKey()))
 		fmt.Println(hex.EncodeToString(iter.LeafBlob()))
 	}
