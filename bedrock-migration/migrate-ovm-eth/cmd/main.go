@@ -59,8 +59,6 @@ func main() {
 			log.Crit("error in iterator", "err", iter.Error())
 		}
 
-		fmt.Println(string(iter.Key()))
-
 		addr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
 		balKey := iter.Value()
 		res, err := st.TryGet(balKey[:])
