@@ -5,6 +5,7 @@ RUN apk add --no-cache make gcc musl-dev linux-headers git
 COPY ./cmd /app/cmd
 COPY Makefile /app/Makefile
 
+WORKDIR /app
 RUN make migrate
 
 FROM alpine:3.15
