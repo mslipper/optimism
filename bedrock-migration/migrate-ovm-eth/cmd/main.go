@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -51,24 +52,23 @@ func main() {
 	}
 	log.Info("opened storage trie")
 
-	iter := st.NodeIterator(nil)
-	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
-	//stBal := stateDB.GetState(OVMETHAddress, balKey)
-	fmt.Println(balKey)
-	res, err := st.TryGet(balKey[:])
-	fmt.Println(st.GetKey(balKey[:]))
-	fmt.Println(err)
-	_, decRes, _, _ := rlp.Split(res)
-	fmt.Println(new(big.Int).SetBytes(decRes).String())
-
-
-	for iter.Next(true) {
-		if !iter.Leaf() {
-			continue
+	iter := db.NewIterator([]byte("addr-preimage-"), nil)
+	for iter.Next() {
+		if iter.Error() != nil {
+			log.Crit("error in iterator", "err", iter.Error())
 		}
-		preimage := st.GetKey(iter.LeafKey())
-		fmt.Printf("%x|%x|%x\n", preimage,iter.LeafKey(), iter.LeafBlob())
-		return
+
+		addr := strings.Split(string(iter.Key()), "-")[2]
+		balKey := iter.Value()
+		res, err := st.TryGet(balKey[:])
+		if err != nil {
+			log.Crit("error reading storage trie", "err", err)
+		}
+		_, balBytes, _, err := rlp.Split(res)
+		if err != nil {
+			log.Crit("error decoding storage trie", "err", err)
+		}
+		fmt.Printf("%s,%s", addr, new(big.Int).SetBytes(balBytes).String())
 	}
 }
 
