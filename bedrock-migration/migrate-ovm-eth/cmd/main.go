@@ -55,7 +55,7 @@ func main() {
 	stBal := stateDB.GetState(OVMETHAddress, balKey)
 	fmt.Println(balKey)
 	res, err := st.TryGet(balKey[:])
-	fmt.Println(stBal)
+	fmt.Println(stBal.Big())
 	fmt.Println(new(big.Int).SetBytes(res).String())
 	fmt.Println(err)
 
