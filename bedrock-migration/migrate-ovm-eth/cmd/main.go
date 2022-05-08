@@ -51,10 +51,11 @@ func main() {
 	log.Info("opened storage trie")
 
 	iter := st.NodeIterator(nil)
-
-	balKey := GetOVMBalanceKey(common.HexToAddress("0xf2bcade085209a930465f3b9b84eec36d870eca8"))
+	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
+	stBal := stateDB.GetState(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"), balKey)
 	fmt.Println(balKey)
 	res, err := st.TryGet(balKey[:])
+	fmt.Println(stBal)
 	fmt.Println(new(big.Int).SetBytes(res).String())
 	fmt.Println(err)
 
