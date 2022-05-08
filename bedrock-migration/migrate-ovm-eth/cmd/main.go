@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/sha3"
 	"math/big"
@@ -52,12 +53,13 @@ func main() {
 
 	iter := st.NodeIterator(nil)
 	balKey := GetOVMBalanceKey(common.HexToAddress("0xa84c44ffd029674f00affcb67b42ee0c7ab1c194"))
-	stBal := stateDB.GetState(OVMETHAddress, balKey)
+	//stBal := stateDB.GetState(OVMETHAddress, balKey)
 	fmt.Println(balKey)
 	res, err := st.TryGet(balKey[:])
-	fmt.Println(stBal.Big())
-	fmt.Println(new(big.Int).SetBytes(res).String())
 	fmt.Println(err)
+	_, decRes, _, _ := rlp.Split(res)
+	fmt.Println(new(big.Int).SetBytes(decRes).String())
+
 
 	for iter.Next(true) {
 		if !iter.Leaf() {
