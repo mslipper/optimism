@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	OVMETHAddress = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
-	Block7412400Root = common.HexToHash("0xd4a9d6b2446a3153caaa4189c327def0673f85609c2c277befa0860b68b8d6cd")
+	OVMETHAddress    = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
+	Block7412000Root = common.HexToHash("0x6894615eaf0954b58ad66adc077449e9ad4885824ee80def7a8a7873bfdade19")
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 		log.Crit("error opening DB", "err", err)
 	}
 
-	stateDB, err := state.New(Block7412400Root, state.NewDatabase(db), nil)
+	stateDB, err := state.New(Block7412000Root, state.NewDatabase(db), nil)
 	if err != nil {
 		log.Crit("error opening state db", "err", err)
 	}
