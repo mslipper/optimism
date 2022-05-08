@@ -298,7 +298,7 @@ func NewDatabaseWithCache(diskdb ethdb.KeyValueStore, cache int) *Database {
 }
 
 // DiskDB retrieves the persistent storage backing the trie database.
-func (db *Database) DiskDB() ethdb.KeyValueReader {
+func (db *Database) DiskDB() ethdb.KeyValueStore {
 	return db.diskdb
 }
 

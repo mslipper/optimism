@@ -888,3 +888,13 @@ func (s *StateDB) AddressInAccessList(addr common.Address) bool {
 func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addressPresent bool, slotPresent bool) {
 	return s.accessList.Contains(addr, slot)
 }
+
+func (s *StateDB) RegisterAddrPreimage(addr common.Address, key common.Hash) {
+	err := s.db.(*cachingDB).db.DiskDB().Put(
+		append([]byte("addr-primage-"), addr.Bytes()...),
+		key[:],
+	)
+	if err != nil {
+		panic(err)
+	}
+}
