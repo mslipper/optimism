@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-isatty"
-	"golang.org/x/crypto/sha3"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,13 +61,4 @@ func main() {
 		res := stateDB.GetState(OVMETHAddress, common.BytesToHash(balKey))
 		fmt.Printf("%s,%s\n", addr, res.Big())
 	}
-}
-
-func GetOVMBalanceKey(addr common.Address) common.Hash {
-	position := common.Big0
-	hasher := sha3.NewLegacyKeccak256()
-	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
-	hasher.Write(common.LeftPadBytes(position.Bytes(), 32))
-	digest := hasher.Sum(nil)
-	return common.BytesToHash(digest)
 }
