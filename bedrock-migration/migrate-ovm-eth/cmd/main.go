@@ -64,6 +64,7 @@ func main() {
 		}
 		stateDB.SetState(OVMETHAddress, balKeyHash, common.Hash{})
 		stateDB.SetBalance(addr, ovmETHBal)
+		log.Info("migrated account", "addr", addr, "bal", ovmETHBal)
 	}
 	log.Info("writing trie modifications")
 	//root, err := stateDB.Commit(true)
