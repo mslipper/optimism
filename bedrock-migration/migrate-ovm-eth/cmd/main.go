@@ -63,7 +63,10 @@ func main() {
 			log.Crit("found account with nonzero balance in state", "addr", addr, "state_bal", stateBal, "ovm_bal", ovmETHBal)
 		}
 		stateDB.SetState(OVMETHAddress, balKeyHash, common.Hash{})
-		stateDB.SetBalance(addr, ovmETHBal)
+		// don't bother with zero balances
+		if ovmETHBal.Cmp(Zero) != 0 {
+			stateDB.SetBalance(addr, ovmETHBal)
+		}
 		log.Info("migrated account", "addr", addr, "bal", ovmETHBal)
 	}
 	log.Info("writing trie modifications")
