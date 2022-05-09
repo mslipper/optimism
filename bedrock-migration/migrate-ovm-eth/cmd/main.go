@@ -7,10 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/sha3"
-	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,19 +59,8 @@ func main() {
 
 		addr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
 		balKey := iter.Value()
-		res, err := st.TryGet(balKey[:])
-		if err != nil {
-			log.Crit("error reading storage trie", "err", err)
-		}
-		if len(res) == 0 {
-			log.Warn("address has zero length state", "addr", addr)
-			continue
-		}
-		_, balBytes, _, err := rlp.Split(res)
-		if err != nil {
-			log.Crit("error decoding storage trie value", "err", err)
-		}
-		fmt.Printf("%s,%s\n", addr, new(big.Int).SetBytes(balBytes).String())
+		res := stateDB.GetState(OVMETHAddress, common.BytesToHash(balKey))
+		fmt.Printf("%s,%s\n", addr, res.Big())
 	}
 }
 
