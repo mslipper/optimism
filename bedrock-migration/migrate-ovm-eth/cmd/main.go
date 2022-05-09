@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-isatty"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +16,7 @@ import (
 var (
 	OVMETHAddress    = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
 	Block7412000Root = common.HexToHash("0x5d4e7f7332568a6063a268db1bb518cbd5cd62e3f1933ee078a9c4a7c44b28c0")
+	Zero             = new(big.Int)
 )
 
 func main() {
@@ -44,11 +45,6 @@ func main() {
 	if err != nil {
 		log.Crit("error opening state db", "err", err)
 	}
-	st := stateDB.StorageTrie(OVMETHAddress)
-	if st == nil {
-		log.Crit("storage trie is nil", "address", OVMETHAddress)
-	}
-	log.Info("opened storage trie")
 
 	iter := db.NewIterator([]byte("addr-preimage-"), nil)
 	for iter.Next() {
@@ -56,12 +52,18 @@ func main() {
 			log.Crit("error in iterator", "err", iter.Error())
 		}
 
-		addr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
+		addrStr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
+		addr := common.HexToAddress(addrStr)
 		balKey := iter.Value()
 		balKeyHash := common.BytesToHash(balKey)
 		res := stateDB.GetState(OVMETHAddress, balKeyHash)
-		fmt.Printf("%s,%s\n", addr, res.Big())
+		ovmETHBal := res.Big()
+		stateBal := stateDB.GetBalance(addr)
+		if stateBal.Cmp(Zero) != 0 {
+			log.Crit("found account with nonzero balance in state", "addr", addr, "state_bal", stateBal, "ovm_bal", ovmETHBal)
+		}
 		stateDB.SetState(OVMETHAddress, balKeyHash, common.Hash{})
+		stateDB.SetBalance(addr, ovmETHBal)
 	}
 	log.Info("writing trie modifications")
 	//root, err := stateDB.Commit(true)
