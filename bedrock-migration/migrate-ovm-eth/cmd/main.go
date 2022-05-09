@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
+	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -76,5 +76,6 @@ func main() {
 	//	log.Crit("error writing trie", "err", err)
 	//}
 	//log.Info("successfully migrated trie", "root", root)
-	fmt.Println(string(stateDB.Dump(&state.DumpConfig{})))
+	enc := json.NewEncoder(os.Stdout)
+	stateDB.IterativeDump(&state.DumpConfig{}, enc)
 }
