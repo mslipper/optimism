@@ -58,7 +58,15 @@ func main() {
 
 		addr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
 		balKey := iter.Value()
-		res := stateDB.GetState(OVMETHAddress, common.BytesToHash(balKey))
+		balKeyHash := common.BytesToHash(balKey)
+		res := stateDB.GetState(OVMETHAddress, balKeyHash)
 		fmt.Printf("%s,%s\n", addr, res.Big())
+		stateDB.SetState(OVMETHAddress, balKeyHash, common.Hash{})
 	}
+	log.Info("writing trie modifications")
+	//root, err := stateDB.Commit(true)
+	//if err != nil {
+	//	log.Crit("error writing trie", "err", err)
+	//}
+	//log.Info("successfully migrated trie", "root", root)
 }
