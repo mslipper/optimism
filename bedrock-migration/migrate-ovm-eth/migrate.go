@@ -82,6 +82,7 @@ func dumpState(inDB state.Database, inStateDB *state.StateDB, outStateDB *state.
 	)
 	log.Info("Trie dumping started", "root", tr.Hash())
 
+	totalOVM := new(big.Int)
 	it := trie.NewIterator(tr.NodeIterator(nil))
 	for it.Next() {
 		var data types.StateAccount
@@ -100,11 +101,12 @@ func dumpState(inDB state.Database, inStateDB *state.StateDB, outStateDB *state.
 		addrHash := crypto.Keccak256Hash(addr[:])
 		code := getCode(addrHash, data, inDB)
 
+		ovmBalance := getOVMETHBalance(inStateDB, addr)
 		if data.Balance.Sign() > 0 {
 			log.Crit("account has non-zero OVM eth balance", "addr", addr)
 		}
-
-		outStateDB.AddBalance(addr, getOVMETHBalance(inStateDB, addr))
+		totalOVM = totalOVM.Add(totalOVM, ovmBalance)
+		outStateDB.AddBalance(addr, ovmBalance)
 		outStateDB.SetCode(addr, code)
 		outStateDB.SetNonce(addr, data.Nonce)
 
@@ -146,7 +148,7 @@ func dumpState(inDB state.Database, inStateDB *state.StateDB, outStateDB *state.
 		}
 	}
 	log.Info("Trie dumping complete", "accounts", accounts,
-		"elapsed", common.PrettyDuration(time.Since(start)))
+		"elapsed", common.PrettyDuration(time.Since(start)), "total_ovm_eth", totalOVM)
 
 	log.Info("committing state DB")
 	newRoot, err := outStateDB.Commit(false)
