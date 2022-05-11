@@ -2,31 +2,32 @@ package migrator
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
+	"golang.org/x/crypto/sha3"
 	"math/big"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
 var (
-	OVMETHAddress    = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
-	Block7412000Root = common.HexToHash("0x5d4e7f7332568a6063a268db1bb518cbd5cd62e3f1933ee078a9c4a7c44b28c0")
-	Zero             = new(big.Int)
-	emptyCodeHash    = crypto.Keccak256(nil)
+	OVMETHAddress = common.HexToAddress("0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000")
+	emptyCodeHash = crypto.Keccak256(nil)
 )
 
-func Migrate(dataDir string, stateRoot common.Hash, outFile string) error {
-	db, err := rawdb.NewLevelDBDatabase(
+var zeroHash common.Hash
+
+func Migrate(dataDir string, stateRoot common.Hash, genesis *core.Genesis, outDir string) error {
+	inDB, err := rawdb.NewLevelDBDatabase(
 		filepath.Join(dataDir, "geth", "chaindata"),
 		0,
 		0,
@@ -34,63 +35,40 @@ func Migrate(dataDir string, stateRoot common.Hash, outFile string) error {
 		true,
 	)
 	if err != nil {
-		return fmt.Errorf("error opening DB: %w", err)
+		log.Crit("error opening raw DB", "err", err)
 	}
 
-	underlyingDB := state.NewDatabase(db)
-	stateDB, err := state.New(stateRoot, underlyingDB, nil)
+	inUnderlyingDB := state.NewDatabase(inDB)
+	inStateDB, err := state.New(stateRoot, inUnderlyingDB, nil)
 	if err != nil {
-		return fmt.Errorf("error opening state db: %w", err)
+		log.Crit("error opening state db", "err", err)
 	}
 
-	iter := db.NewIterator([]byte("addr-preimage-"), nil)
-	var accounts uint64
-	for iter.Next() {
-		if iter.Error() != nil {
-			return fmt.Errorf("error in iterator: %w", iter.Error())
-		}
-
-		addrStr := hex.EncodeToString([]byte(strings.TrimPrefix(string(iter.Key()), "addr-preimage-")))
-		addr := common.HexToAddress(addrStr)
-		balKey := iter.Value()
-		balKeyHash := common.BytesToHash(balKey)
-		res := stateDB.GetState(OVMETHAddress, balKeyHash)
-		ovmETHBal := res.Big()
-		stateBal := stateDB.GetBalance(addr)
-		if stateBal.Cmp(Zero) != 0 {
-			log.Crit("found account with nonzero balance in state", "addr", addr, "state_bal", stateBal, "ovm_bal", ovmETHBal)
-		}
-		stateDB.SetState(OVMETHAddress, balKeyHash, common.Hash{})
-		// don't bother with zero balances
-		if ovmETHBal.Cmp(Zero) != 0 {
-			stateDB.SetBalance(addr, ovmETHBal)
-		}
-		log.Info("migrated account", "addr", addr, "bal", ovmETHBal)
-		accounts++
-	}
-	log.Info("successfully migrated accounts", "count", accounts)
-	log.Info("writing trie modifications")
-	root, err := stateDB.Commit(false)
-	if err != nil {
-		log.Crit("error writing trie", "err", err)
-	}
-	log.Info("successfully migrated trie", "root", root)
-	log.Info("dumping state")
-
-	return DumpState(underlyingDB, root, outFile)
-}
-
-func DumpState(inDB state.Database, root common.Hash, outDir string) error {
 	outDB, err := rawdb.NewLevelDBDatabase(outDir, 0, 0, "", false)
 	if err != nil {
 		return err
 	}
 
-	outStateDB, err := state.New(common.Hash{}, state.NewDatabase(outDB), nil)
-	if err != nil {
-		return err
+	log.Info("writing genesis data")
+	if _, err := genesis.Commit(outDB); err != nil {
+		log.Crit("error writing genesis data")
 	}
 
+	if stateRoot == zeroHash {
+		stateRoot = getStateRoot(inDB)
+	}
+
+	outStateDB, err := state.New(common.Hash{}, state.NewDatabase(outDB), nil)
+	if err != nil {
+		return fmt.Errorf("error opening output state DB: %w", err)
+	}
+
+	log.Info("dumping state")
+	dumpState(inUnderlyingDB, inStateDB, outStateDB, stateRoot, genesis)
+	return nil
+}
+
+func dumpState(inDB state.Database, inStateDB *state.StateDB, outStateDB *state.StateDB, root common.Hash, genesis *core.Genesis) common.Hash {
 	tr, err := inDB.OpenTrie(root)
 	if err != nil {
 		panic(err)
@@ -112,11 +90,21 @@ func DumpState(inDB state.Database, root common.Hash, outDir string) error {
 		}
 
 		addrBytes := tr.GetKey(it.Key)
+
 		addr := common.BytesToAddress(addrBytes)
+		if _, ok := genesis.Alloc[addr]; ok {
+			log.Info("skipping preallocated account", "addr", addr)
+			continue
+		}
+
 		addrHash := crypto.Keccak256Hash(addr[:])
 		code := getCode(addrHash, data, inDB)
 
-		outStateDB.AddBalance(addr, data.Balance)
+		if data.Balance.Sign() > 0 {
+			log.Crit("account has non-zero OVM eth balance", "addr", addr)
+		}
+
+		outStateDB.AddBalance(addr, getOVMETHBalance(inStateDB, addr))
 		outStateDB.SetCode(addr, code)
 		outStateDB.SetNonce(addr, data.Nonce)
 
@@ -159,18 +147,20 @@ func DumpState(inDB state.Database, root common.Hash, outDir string) error {
 	}
 	log.Info("Trie dumping complete", "accounts", accounts,
 		"elapsed", common.PrettyDuration(time.Since(start)))
+
 	log.Info("committing state DB")
 	newRoot, err := outStateDB.Commit(false)
 	if err != nil {
-		panic(err)
+		log.Crit("error writing output state DB", "err", err)
 	}
 	log.Info("committed state DB", "root", newRoot)
 	log.Info("committing trie DB")
-	if err := outStateDB.Database().TrieDB().Commit(root, true, nil); err != nil {
-		panic(err)
+	if err := outStateDB.Database().TrieDB().Commit(newRoot, true, nil); err != nil {
+		log.Crit("error writing output trie DB", "err", err)
 	}
 	log.Info("committed trie DB")
-	return nil
+
+	return newRoot
 }
 
 func getCode(addrHash common.Hash, data types.StateAccount, db state.Database) []byte {
@@ -186,4 +176,19 @@ func getCode(addrHash common.Hash, data types.StateAccount, db state.Database) [
 		panic(err)
 	}
 	return code
+}
+
+func getStateRoot(db ethdb.Reader) common.Hash {
+	block := rawdb.ReadHeadBlock(db)
+	return block.Root()
+}
+
+func getOVMETHBalance(inStateDB *state.StateDB, addr common.Address) *big.Int {
+	position := common.Big0
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
+	hasher.Write(common.LeftPadBytes(position.Bytes(), 32))
+	digest := hasher.Sum(nil)
+	balKey := common.BytesToHash(digest)
+	return inStateDB.GetState(OVMETHAddress, balKey).Big()
 }

@@ -26,7 +26,12 @@ func main() {
 				Name:    "state-root",
 				Aliases: []string{"r"},
 				Usage:   "state root to dump",
-				Value:   "0x5d4e7f7332568a6063a268db1bb518cbd5cd62e3f1933ee078a9c4a7c44b28c0",
+			},
+			&cli.StringFlag{
+				Name:     "genesis-file",
+				Aliases:  []string{"g"},
+				Usage:    "path to a genesis file",
+				Required: true,
 			},
 			&cli.StringFlag{
 				Name:     "out-file",
@@ -47,6 +52,15 @@ func action(cliCtx *cli.Context) error {
 	dataDir := cliCtx.String("data-dir")
 	stateRoot := cliCtx.String("state-root")
 	outFile := cliCtx.String("out-file")
-	stateRootHash := common.HexToHash(stateRoot)
-	return migrator.Migrate(dataDir, stateRootHash, outFile)
+	genesisPath := cliCtx.String("genesis-file")
+	genesis, err := migrator.ReadGenesisFromFile(genesisPath)
+	if err != nil {
+		return err
+	}
+
+	var stateRootHash common.Hash
+	if stateRoot != "" {
+		stateRootHash = common.HexToHash(stateRoot)
+	}
+	return migrator.Migrate(dataDir, stateRootHash, genesis, outFile)
 }
