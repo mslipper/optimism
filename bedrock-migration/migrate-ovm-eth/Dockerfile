@@ -5,8 +5,8 @@ RUN apk add --no-cache make gcc musl-dev linux-headers git
 COPY Makefile /app/Makefile
 COPY go.mod /app/go.mod
 COPY go.sum /app/go.sum
-COPY json_builder.go /app/json_builder.go
 COPY migrate.go /app/migrate.go
+COPY genesis.go /app/genesis.go
 WORKDIR /app
 RUN go mod download
 COPY ./cmd /app/cmd
