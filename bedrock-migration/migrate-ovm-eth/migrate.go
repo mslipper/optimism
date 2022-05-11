@@ -1,7 +1,6 @@
 package migrator
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/hex"
 	"fmt"
@@ -14,9 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"math/big"
-	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -80,39 +77,35 @@ func Migrate(dataDir string, stateRoot common.Hash, outFile string) error {
 	log.Info("successfully migrated trie", "root", root)
 	log.Info("dumping state")
 
-	f, err := os.OpenFile(outFile, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o777)
-	if err != nil {
-		return fmt.Errorf("error opening dump file: %w", err)
-	}
-	builder := NewJSONBuilder(bufio.NewWriter(f))
-	return CustomDump(root, underlyingDB, builder)
+	return DumpInMemory(underlyingDB, root, outFile)
 }
 
-func CustomDump(root common.Hash, db state.Database, builder *JSONBuilder) error {
-	tr, err := db.OpenTrie(root)
+func DumpInMemory(inDB state.Database, root common.Hash, outDir string) error {
+	outDB, err := rawdb.NewLevelDBDatabase(outDir, 0, 0, "", false)
+	if err != nil {
+		return err
+	}
+
+	outStateDB, err := state.New(common.Hash{}, state.NewDatabase(outDB), nil)
+	if err != nil {
+		return err
+	}
+
+	tr, err := inDB.OpenTrie(root)
 	if err != nil {
 		panic(err)
 	}
 
 	var (
-		accounts uint64
-		start    = time.Now()
-		logged   = time.Now()
+		accounts     uint64
+		lastAccounts uint64
+		start        = time.Now()
+		logged       = time.Now()
 	)
 	log.Info("Trie dumping started", "root", tr.Hash())
 
-	if err := builder.Begin(); err != nil {
-		return err
-	}
-
 	it := trie.NewIterator(tr.NodeIterator(nil))
 	for it.Next() {
-		if accounts > 0 {
-			if err := builder.Next(true); err != nil {
-				return err
-			}
-		}
-
 		var data types.StateAccount
 		if err := rlp.DecodeBytes(it.Value, &data); err != nil {
 			panic(err)
@@ -121,96 +114,57 @@ func CustomDump(root common.Hash, db state.Database, builder *JSONBuilder) error
 		addrBytes := tr.GetKey(it.Key)
 		addr := common.BytesToAddress(addrBytes)
 		addrHash := crypto.Keccak256Hash(addr[:])
-		code := getCode(addrHash, data, db)
+		code := getCode(addrHash, data, inDB)
 
-		if err := builder.Enter(hex.EncodeToString(addr.Bytes())); err != nil {
-			return err
-		}
+		outStateDB.AddBalance(addr, data.Balance)
+		outStateDB.SetCode(addr, code)
+		outStateDB.SetNonce(addr, data.Nonce)
 
-		isFirstStorage := true
-		var hasStorage bool
-		storageTrie, err := db.OpenStorageTrie(addrHash, data.Root)
+		storageTrie, err := inDB.OpenStorageTrie(addrHash, data.Root)
 		if err != nil {
 			panic(err)
 		}
 		storageIt := trie.NewIterator(storageTrie.NodeIterator(nil))
+		var storageSlots uint64
+		storageLogged := time.Now()
 		for storageIt.Next() {
-			if isFirstStorage {
-				if err := builder.Enter("storage"); err != nil {
-					return err
-				}
-			} else {
-				if err := builder.Next(true); err != nil {
-					return err
-				}
-			}
+			storageSlots++
 			_, content, _, err := rlp.Split(storageIt.Value)
 			if err != nil {
-				log.Error("Failed to decode the value returned by iterator", "error", err)
-				continue
+				panic(err)
 			}
-			if err := builder.SetString(
-				common.Bytes2Hex(storageTrie.GetKey(storageIt.Key)),
-				common.Bytes2Hex(content),
-			); err != nil {
-				return err
+			outStateDB.SetState(
+				addr,
+				common.BytesToHash(storageTrie.GetKey(storageIt.Key)),
+				common.BytesToHash(content),
+			)
+			if time.Since(storageLogged) > 8*time.Second {
+				since := time.Since(start)
+				log.Info("Storage dumping in progress", "addr", addr, "storage_slots", storageSlots,
+					"elapsed", common.PrettyDuration(since))
+				storageLogged = time.Now()
 			}
-			isFirstStorage = false
-			hasStorage = true
-		}
-		if hasStorage {
-			if err := builder.Next(false); err != nil {
-				return err
-			}
-			if err := builder.Leave(); err != nil {
-				return err
-			}
-			if err := builder.Next(true); err != nil {
-				return err
-			}
-		}
-
-		if code != "" {
-			if err := builder.SetString("code", code); err != nil {
-				return err
-			}
-			if err := builder.Next(true); err != nil {
-				return err
-			}
-		}
-		if err := builder.SetString("nonce", strconv.FormatUint(data.Nonce, 10)); err != nil {
-			return err
-		}
-		if err := builder.Next(true); err != nil {
-			return err
-		}
-		if err := builder.SetString("balance", "0x"+data.Balance.Text(16)); err != nil {
-			return err
-		}
-		if err := builder.Next(true); err != nil {
-			return err
 		}
 
 		accounts++
 		if time.Since(logged) > 8*time.Second {
-			log.Info("Trie dumping in progress", "at", it.Key, "accounts", accounts,
-				"elapsed", common.PrettyDuration(time.Since(start)))
-			logged = time.Now()
-		}
+			since := time.Since(start)
+			rate := float64(accounts-lastAccounts) / float64(since/time.Second)
 
-		if err := builder.Leave(); err != nil {
-			return err
+			log.Info("Trie dumping in progress", "at", it.Key, "accounts", accounts,
+				"elapsed", common.PrettyDuration(since), "accs_per_s", rate)
+			logged = time.Now()
+			lastAccounts = accounts
 		}
 	}
 	log.Info("Trie dumping complete", "accounts", accounts,
 		"elapsed", common.PrettyDuration(time.Since(start)))
-
 	return nil
 }
 
-func getCode(addrHash common.Hash, data types.StateAccount, db state.Database) string {
+func getCode(addrHash common.Hash, data types.StateAccount, db state.Database) []byte {
 	if bytes.Equal(data.CodeHash, emptyCodeHash) {
-		return ""
+		return nil
 	}
 
 	code, err := db.ContractCode(
@@ -220,5 +174,5 @@ func getCode(addrHash common.Hash, data types.StateAccount, db state.Database) s
 	if err != nil {
 		panic(err)
 	}
-	return common.Bytes2Hex(code)
+	return code
 }
