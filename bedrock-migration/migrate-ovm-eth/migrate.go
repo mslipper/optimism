@@ -70,17 +70,17 @@ func Migrate(dataDir string, stateRoot common.Hash, outFile string) error {
 	}
 	log.Info("successfully migrated accounts", "count", accounts)
 	log.Info("writing trie modifications")
-	root, err := stateDB.Commit(true)
+	root, err := stateDB.Commit(false)
 	if err != nil {
 		log.Crit("error writing trie", "err", err)
 	}
 	log.Info("successfully migrated trie", "root", root)
 	log.Info("dumping state")
 
-	return DumpInMemory(underlyingDB, root, outFile)
+	return DumpState(underlyingDB, root, outFile)
 }
 
-func DumpInMemory(inDB state.Database, root common.Hash, outDir string) error {
+func DumpState(inDB state.Database, root common.Hash, outDir string) error {
 	outDB, err := rawdb.NewLevelDBDatabase(outDir, 0, 0, "", false)
 	if err != nil {
 		return err
@@ -159,6 +159,17 @@ func DumpInMemory(inDB state.Database, root common.Hash, outDir string) error {
 	}
 	log.Info("Trie dumping complete", "accounts", accounts,
 		"elapsed", common.PrettyDuration(time.Since(start)))
+	log.Info("committing state DB")
+	newRoot, err := outStateDB.Commit(false)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("committed state DB", "root", newRoot)
+	log.Info("committing trie DB")
+	if err := outStateDB.Database().TrieDB().Commit(root, true, nil); err != nil {
+		panic(err)
+	}
+	log.Info("committed trie DB")
 	return nil
 }
 
