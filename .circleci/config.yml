@@ -312,8 +312,6 @@ jobs:
       image: ubuntu-2004:202111-02
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.12
       - run:
           name: markdown lint
           command: |
