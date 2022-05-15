@@ -307,10 +307,68 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
             docker push <<parameters.docker_tags>>
 
+
+  bedrock-go-tests:
+    docker:
+      - image: ethereumoptimism/go-builder:latest
+    steps:
+      - checkout
+      - run:
+          name: lint op-node
+          command: |
+            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell ./...
+          working_directory: op-node
+      - run:
+          name: lint op-proposer
+          command: |
+            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell ./...
+          working_directory: op-proposer
+      - run:
+          name: lint op-batcher
+          command: |
+            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell ./...
+          working_directory: op-batcher
+      - run:
+          name: lint op-e2e
+          command: |
+            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell ./...
+          working_directory: op-e2e
+      - run:
+          name: test op-node
+          command: |
+            gotestsum --junitfile /test-results/op-node.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
+          working_directory: op-node
+      - run:
+          name: test op-proposer
+          command: |
+            gotestsum --junitfile /test-results/op-proposer.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
+          working_directory: op-proposer
+      - run:
+          name: test op-batcher
+          command: |
+            gotestsum --junitfile /test-results/op-batcher.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
+          working_directory: op-batcher
+      - run:
+          name: test op-e2e
+          command: |
+            gotestsum --junitfile /test-results/op-e2e.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
+          working_directory: op-e2e
+
+  fuzz-op-node:
+    docker:
+      - image: ethereumoptimism/go-builder:latest
+    steps:
+      - checkout
+      - name: Fuzz
+          command: make fuzz
+          working_directory: op-node
+
 workflows:
   main:
     jobs:
       - yarn-monorepo
+      - bedrock-go-tests
+      - fuzz-op-node
       - go-lint-test-build:
           name: batch-submitter-tests
           binary_name: batch-submitter
