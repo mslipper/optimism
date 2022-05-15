@@ -339,6 +339,9 @@ jobs:
             gotestsum --junitfile /test-results/op-node.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
           working_directory: op-node
       - run:
+          name: prep results dir
+          command: mkdir -p /test-results
+      - run:
           name: test op-proposer
           command: |
             gotestsum --junitfile /test-results/op-proposer.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
