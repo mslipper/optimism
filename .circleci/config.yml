@@ -309,7 +309,7 @@ jobs:
 
   bedrock-solidity:
     docker:
-      - image: ethereumoptimism/js-builder:latest
+      - image: ethereumoptimism/js-builder:0.0.4
     steps:
       - checkout
       - run:
@@ -322,6 +322,10 @@ jobs:
             # remove prettierrc in root of repo since it doesn't work with non-Lerna packages
             rm ../.eslintrc.js
             yarn lint:check
+          working_directory: contracts-bedrock
+      - run:
+          name: slither
+          command: yarn slither
           working_directory: contracts-bedrock
       - run:
           name: build forge
