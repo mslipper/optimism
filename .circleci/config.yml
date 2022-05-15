@@ -307,6 +307,33 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
             docker push <<parameters.docker_tags>>
 
+  bedrock-solidity:
+    docker:
+      - image: ethereumoptimism/js-builder:latest
+    steps:
+      - checkout
+      - run:
+          name: install
+          command: yarn install
+          working_directory: contracts-bedrock
+      - run:
+          name: lint
+          command: yarn lint:check
+          working_directory: contracts-bedrock
+      - run:
+          name: build forge
+          command: yarn build:forge
+          working_directory: contracts-bedrock
+      - run:
+          name: test forge
+          command: yarn test:forge
+          working_directory: contracts-bedrock
+
+      - run:
+          name: gas snapshot
+          command: forge snapshot && git diff --exit-code
+          working_directory: contracts-bedrock        
+
 
   bedrock-go-tests:
     docker:
@@ -374,6 +401,7 @@ workflows:
     jobs:
       - yarn-monorepo
       - bedrock-go-tests
+      - bedrock-solidity
       - fuzz-op-node
       - go-lint-test-build:
           name: batch-submitter-tests
