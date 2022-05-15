@@ -334,13 +334,13 @@ jobs:
             golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell ./...
           working_directory: op-e2e
       - run:
+          name: prep results dir
+          command: mkdir -p /test-results
+      - run:
           name: test op-node
           command: |
             gotestsum --junitfile /test-results/op-node.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
           working_directory: op-node
-      - run:
-          name: prep results dir
-          command: mkdir -p /test-results
       - run:
           name: test op-proposer
           command: |
