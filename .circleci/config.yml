@@ -309,7 +309,7 @@ jobs:
 
   bedrock-markdown:
     docker:
-      - image: ethereumoptimism/js-builder:0.0.4
+      - image: circleci/buildpack-deps:stretch
     steps:
       - checkout
       - run:
