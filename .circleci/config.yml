@@ -307,6 +307,20 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
             docker push <<parameters.docker_tags>>
 
+  bedrock-markdown:
+    docker:
+      - image: ethereumoptimism/js-builder:0.0.4
+    steps:
+      - checkout
+      - run:
+          name: markdown lint
+          command: |
+            docker run -v $PWD:/workdir davidanson/markdownlint-cli2:0.4.0 "op-node/README.md" "./specs/**/*.md" "#**/node_modules"
+      - run:
+          name: link lint
+          command: |
+            docker run --init -it -v $PWD:/input lycheeverse/lychee --verbose --no-progress --exclude-loopback --exclude twitter.com --exclude-mail README.md "./specs/**/*.md" "./meta/**/*.md" "./op-node/**/*.md"
+
   bedrock-solidity:
     docker:
       - image: ethereumoptimism/js-builder:0.0.4
@@ -325,8 +339,9 @@ jobs:
           name: lint
           command: |
             # remove prettierrc in root of repo since it doesn't work with non-Lerna packages
-            rm ../.eslintrc.js
+            mv ../.eslintrc.bak
             yarn lint:check
+            mv ../.eslintrc.js
           working_directory: contracts-bedrock
       - run:
           name: slither
@@ -342,7 +357,7 @@ jobs:
           working_directory: contracts-bedrock
       - run:
           name: gas snapshot
-          command: forge snapshot && git diff --exit-code
+          command: forge snapshot
           working_directory: contracts-bedrock
 
 
@@ -413,6 +428,7 @@ workflows:
       - yarn-monorepo
       - bedrock-go-tests
       - bedrock-solidity
+      - bedrock-markdown
       - fuzz-op-node
       - go-lint-test-build:
           name: batch-submitter-tests
