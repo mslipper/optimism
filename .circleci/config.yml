@@ -317,11 +317,11 @@ jobs:
       - run:
           name: markdown lint
           command: |
-            docker run -v $PWD:/workdir davidanson/markdownlint-cli2:0.4.0 "op-node/README.md" "./specs/**/*.md" "#**/node_modules"
+            docker run -v `pwd`:/workdir davidanson/markdownlint-cli2:0.4.0 "op-node/README.md" "./specs/**/*.md" "#**/node_modules"
       - run:
           name: link lint
           command: |
-            docker run --init -it -v $PWD:/input lycheeverse/lychee --verbose --no-progress --exclude-loopback --exclude twitter.com --exclude-mail README.md "./specs/**/*.md" "./meta/**/*.md" "./op-node/**/*.md"
+            docker run --init -it -v `pwd`:/input lycheeverse/lychee --verbose --no-progress --exclude-loopback --exclude twitter.com --exclude-mail /input/README.md "/input/specs/**/*.md" "/input/meta/**/*.md" "/input/op-node/**/*.md"
 
   bedrock-solidity:
     docker:
