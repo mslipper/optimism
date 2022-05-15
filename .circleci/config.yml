@@ -359,9 +359,10 @@ jobs:
       - image: ethereumoptimism/go-builder:latest
     steps:
       - checkout
-      - name: Fuzz
-        command: make fuzz
-        working_directory: op-node
+      - run:
+          name: Fuzz
+          command: make fuzz
+          working_directory: op-node
 
 workflows:
   main:
