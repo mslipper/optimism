@@ -308,8 +308,8 @@ jobs:
             docker push <<parameters.docker_tags>>
 
   bedrock-markdown:
-    docker:
-      - image: circleci/buildpack-deps:stretch
+    machine:
+      image: ubuntu-2004:202111-02
     steps:
       - checkout
       - setup_remote_docker:
