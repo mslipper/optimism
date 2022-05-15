@@ -100,7 +100,7 @@ func TestDerivePrivateKey(t *testing.T) {
 			name:     "invalid mnemonic",
 			mnemonic: invalidMnemonic,
 			hdPath:   validHDPath,
-			expErr:   errors.New("Checksum incorrect"),
+			expErr:   errors.New("Invalid mnemonic"),
 		},
 		{
 			name:     "valid mnemonic invalid hdpath",
