@@ -312,6 +312,9 @@ jobs:
       - image: ethereumoptimism/js-builder:0.0.4
     steps:
       - checkout
+          post:
+            - git submodule sync --recursive
+            - git submodule update --recursive --init
       - run:
           name: install
           command: yarn install
