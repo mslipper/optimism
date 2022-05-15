@@ -360,8 +360,8 @@ jobs:
     steps:
       - checkout
       - name: Fuzz
-          command: make fuzz
-          working_directory: op-node
+        command: make fuzz
+        working_directory: op-node
 
 workflows:
   main:
