@@ -312,6 +312,8 @@ jobs:
       - image: circleci/buildpack-deps:stretch
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: markdown lint
           command: |
