@@ -356,6 +356,8 @@ jobs:
           command: |
             gotestsum --junitfile /test-results/op-e2e.xml -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out -covermode=atomic ./...
           working_directory: op-e2e
+      - store_test_results:
+          path: /test-results
 
   fuzz-op-node:
     docker:
