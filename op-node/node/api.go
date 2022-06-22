@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ethereum-optimism/optimism/op-node/metrics"
 	"math/big"
 
 	"github.com/ethereum-optimism/optimism/op-node/version"
@@ -51,6 +52,8 @@ func newNodeAPI(config *rollup.Config, l2Client l2EthClient, log log.Logger) *no
 }
 
 func (n *nodeAPI) OutputAtBlock(ctx context.Context, number rpc.BlockNumber) ([]eth.Bytes32, error) {
+	recordDur := metrics.RecordRPCServerRequest("optimism_outputAtBlock")
+	defer recordDur()
 	// TODO: rpc.BlockNumber doesn't support the "safe" tag. Need a new type
 
 	head, err := n.client.GetBlockHeader(ctx, toBlockNumArg(number))
@@ -83,6 +86,8 @@ func (n *nodeAPI) OutputAtBlock(ctx context.Context, number rpc.BlockNumber) ([]
 }
 
 func (n *nodeAPI) Version(ctx context.Context) (string, error) {
+	recordDur := metrics.RecordRPCServerRequest("optimism_version")
+	defer recordDur()
 	return version.Version + "-" + version.Meta, nil
 }
 

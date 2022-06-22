@@ -45,7 +45,7 @@ func (m *mockRPC) Close() {
 	m.MethodCalled("Close")
 }
 
-var _ RPCClient = (*mockRPC)(nil)
+var _ client.RPCClient = (*mockRPC)(nil)
 
 func randHash() (out common.Hash) {
 	rand.Read(out[:])
