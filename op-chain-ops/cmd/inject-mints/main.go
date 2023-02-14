@@ -20,12 +20,14 @@ func main() {
 		Usage: "Injects mints into l2geth witness data",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "db-path",
-				Usage: "Path to database",
+				Name:     "db-path",
+				Usage:    "Path to database",
+				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "witness-file-out",
-				Usage: "Path to the witness file",
+				Name:     "witness-file-out",
+				Usage:    "Path to the witness file",
+				Required: true,
 			},
 			cli.IntFlag{
 				Name:  "db-cache",
