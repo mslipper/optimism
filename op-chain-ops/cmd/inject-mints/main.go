@@ -54,17 +54,23 @@ func main() {
 
 			log.Info("Reading mint events from DB")
 			headBlock := rawdb.ReadHeadBlock(ldb)
-			logProgress := ether.ProgressLogger(100, "read mint events")
 			seenAddrs := make(map[common.Address]bool)
+			var count uint64
+			progressCb := func(headNum uint64) {
+				if count%1000 > 0 {
+					return
+				}
+				log.Info("read mint events", "head", headBlock.NumberU64()-count)
+			}
 			err = ether.IterateMintEvents(ldb, headBlock.NumberU64(), func(address common.Address, headNum uint64) error {
-				logProgress("head", headNum)
 				if seenAddrs[address] {
 					return nil
 				}
+				count++
 				seenAddrs[address] = true
 				_, err := fmt.Fprintf(f, "ETH|%s\n", address.Hex())
 				return err
-			})
+			}, progressCb)
 			if err != nil {
 				return fmt.Errorf("error iterating mint events: %w", err)
 			}
