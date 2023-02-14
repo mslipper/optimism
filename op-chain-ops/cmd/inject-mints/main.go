@@ -57,10 +57,10 @@ func main() {
 			seenAddrs := make(map[common.Address]bool)
 			var count uint64
 			progressCb := func(headNum uint64) {
-				if count%1000 > 0 {
+				if headNum%1000 > 0 {
 					return
 				}
-				log.Info("read mint events", "head", headBlock.NumberU64()-count)
+				log.Info("read mint events", "head", headBlock.NumberU64()-headNum, "count", count)
 			}
 			err = ether.IterateMintEvents(ldb, headBlock.NumberU64(), func(address common.Address, headNum uint64) error {
 				if seenAddrs[address] {
