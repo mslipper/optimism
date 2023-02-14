@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum-optimism/optimism/op-chain-ops/db"
 	"math/big"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
@@ -15,7 +15,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/ethereum-optimism/optimism/op-bindings/hardhat"
@@ -164,10 +163,7 @@ func main() {
 
 			dbCache := ctx.Int("db-cache")
 			dbHandles := ctx.Int("db-handles")
-
-			chaindataPath := filepath.Join(ctx.String("db-path"), "geth", "chaindata")
-			ancientPath := filepath.Join(chaindataPath, "ancient")
-			ldb, err := rawdb.NewLevelDBDatabaseWithFreezer(chaindataPath, dbCache, dbHandles, ancientPath, "", false)
+			ldb, err := db.Open(ctx.String("db-path"), dbCache, dbHandles)
 			if err != nil {
 				return err
 			}
@@ -194,7 +190,7 @@ func main() {
 				return err
 			}
 
-			postLDB, err := rawdb.NewLevelDBDatabaseWithFreezer(chaindataPath, dbCache, dbHandles, ancientPath, "", false)
+			postLDB, err := db.Open(ctx.String("db-path"), dbCache, dbHandles)
 			if err != nil {
 				return err
 			}
