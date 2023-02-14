@@ -55,8 +55,13 @@ func main() {
 			log.Info("Reading mint events from DB")
 			headBlock := rawdb.ReadHeadBlock(ldb)
 			logProgress := ether.ProgressLogger(100, "read mint events")
+			seenAddrs := make(map[common.Address]bool)
 			err = ether.IterateMintEvents(ldb, headBlock.NumberU64(), func(address common.Address, headNum uint64) error {
 				logProgress("head", headNum)
+				if seenAddrs[address] {
+					return nil
+				}
+				seenAddrs[address] = true
 				_, err := fmt.Fprintf(f, "ETH|%s\n", address.Hex())
 				return err
 			})
@@ -69,6 +74,6 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Crit("error in migration", "err", err)
+		log.Crit("error in inject-mints", "err", err)
 	}
 }
