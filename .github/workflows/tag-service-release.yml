@@ -1,4 +1,4 @@
-name: Release Service
+name: Tag Service Release
 
 on:
   workflow_dispatch:
@@ -34,6 +34,6 @@ jobs:
           python-version: "3.10"
       - name: Install deps
         run: pip install packaging
-      - run: ops/scripts/release-service.py ${{ github.event.inputs.bump }} ${{ github.event.inputs.service }}
+      - run: ops/scripts/tag-service-release.py ${{ github.event.inputs.bump }} ${{ github.event.inputs.service }}
         env:
           INPUT_GITHUB_TOKEN: ${{ github.token }}

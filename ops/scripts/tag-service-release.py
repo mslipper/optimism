@@ -18,7 +18,7 @@ MIN_VERSIONS = {
 
 VALID_BUMPS = ('major', 'minor', 'patch')
 
-MESSAGE_TEMPLATE = '[release-service] Release {service} at {version}'
+MESSAGE_TEMPLATE = '[tag-service-release] Tag {service} at {version}'
 
 LOGGING_CONFIG = {
     'version': 1,
