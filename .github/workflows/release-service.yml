@@ -6,6 +6,7 @@ on:
       bump:
         description: 'How much to bump the version by'
         required: true
+        type: choice
         options:
           - major
           - minor
@@ -13,6 +14,7 @@ on:
       service:
         description: 'Which service to release'
         required: true
+        type: choice
         options:
           - op-node
           - op-batcher
