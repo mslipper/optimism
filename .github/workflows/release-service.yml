@@ -1,4 +1,4 @@
-name: Release OP Stack
+name: Release Service
 
 on:
   workflow_dispatch:
