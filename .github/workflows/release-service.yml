@@ -35,3 +35,5 @@ jobs:
       - name: Install deps
         run: pip install packaging
       - run: ops/scripts/release-service.py ${{ github.event.inputs.bump }} ${{ github.event.inputs.service }}
+        env:
+          INPUT_GITHUB_TOKEN: ${{ github.token }}
