@@ -28,6 +28,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Fetch tags
+        run: git fetch --tags origin
       - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
