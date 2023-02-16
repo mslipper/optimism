@@ -1,0 +1,33 @@
+name: Release OP Stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'How much to bump the version by'
+        required: true
+        options:
+          - major
+          - minor
+          - patch
+      service:
+        description: 'Which service to release'
+        required: true
+        options:
+          - op-node
+          - op-batcher
+          - op-proposer
+          - proxyd
+          - indexer
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+        - uses: actions/checkout@v2
+        - name: Setup Python 3.10
+          uses: actions/setup-python@v4
+          with:
+            python-version: 3.10
+        - run: ops/scripts/release-service.py
