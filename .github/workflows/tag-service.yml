@@ -42,7 +42,7 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
         working-directory: ops/tag-service
-      - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }} ${{
+      - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }}
         env:
           INPUT_GITHUB_TOKEN: ${{ github.token }}
       - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }} --pre-release
