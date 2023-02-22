@@ -60,7 +60,7 @@ def tag_version(bump, service, pre_release):
 
     # Filter out tags that don't match the service name, and tags
     # for prerelease versions.
-    version_pattern = f'^{service}/v\\d+\\.\\d+\\.\\d+(?-rc.\\d+)$'
+    version_pattern = f'^{service}/v\\d+\\.\\d+\\.\\d+(-rc\\.\\d+)?$'
     svc_versions = [t.replace(f'{service}/v', '') for t in tags if re.match(version_pattern, t)]
     svc_versions = sorted(svc_versions, key=lambda v: semver.Version.parse(v), reverse=True)
 
