@@ -45,3 +45,7 @@ jobs:
       - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }} ${{
         env:
           INPUT_GITHUB_TOKEN: ${{ github.token }}
+      - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }} --pre-release
+        env:
+          INPUT_GITHUB_TOKEN: ${{ github.token }}
+        if: ${{ github.event.inputs.prerelease }}
