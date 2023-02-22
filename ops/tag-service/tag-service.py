@@ -69,6 +69,8 @@ def tag_version(bump, service, pre_release):
     else:
         latest_version = svc_versions[0]
 
+    latest_version = semver.Version.parse(latest_version)
+
     log.info(f'Latest version: v{latest_version}')
 
     if bump == 'major':
