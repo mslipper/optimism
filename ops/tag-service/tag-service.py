@@ -17,7 +17,7 @@ MIN_VERSIONS = {
     'indexer': '0.5.0'
 }
 
-VALID_BUMPS = ('major', 'minor', 'patch', 'prerelease')
+VALID_BUMPS = ('major', 'minor', 'patch', 'prerelease', 'finalize-prerelease')
 
 MESSAGE_TEMPLATE = '[tag-service-release] Tag {service} at {version}'
 
@@ -67,6 +67,9 @@ def tag_version(bump, service, pre_release):
     if pre_release and bump == 'prerelease':
         raise Exception('Cannot use --bump=prerelease with --pre-release')
 
+    if pre_release and bump == 'finalize-prerelease':
+        raise Exception('Cannot use --bump=finalize-prerelease with --pre-release')
+
     if len(svc_versions) == 0:
         latest_version = MIN_VERSIONS[service]
     else:
@@ -84,6 +87,8 @@ def tag_version(bump, service, pre_release):
         bumped = latest_version.bump_patch()
     elif bump == 'prerelease':
         bumped = latest_version.bump_prerelease()
+    elif bump == 'finalize-prerelease':
+        bumped = latest_version.finalize_version()
     else:
         raise Exception('Invalid bump type: {}'.format(bump))
 

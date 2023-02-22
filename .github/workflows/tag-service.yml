@@ -12,6 +12,7 @@ on:
           - minor
           - patch
           - prerelease
+          - finalize-prerelease
       service:
         description: 'Which service to release'
         required: true
