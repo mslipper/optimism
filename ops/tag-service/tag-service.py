@@ -5,7 +5,8 @@ import re
 import subprocess
 import sys
 
-from packaging.version import Version
+import click
+import semver
 
 # Minimum version numbers for packages migrating from legacy versioning.
 MIN_VERSIONS = {
@@ -49,21 +50,19 @@ logging.config.dictConfig(LOGGING_CONFIG)
 log = logging.getLogger(__name__)
 
 
-def main():
-    bump = sys.argv[1]
-    service = sys.argv[2]
-    if bump not in VALID_BUMPS:
-        die('bump must be "major" "minor" or "patch"')
-    if service not in MIN_VERSIONS:
-        die('service must be one of: {}'.format(', '.join(MIN_VERSIONS.keys())))
-
+@click.command()
+@click.option('--bump', required=True, type=click.Choice(VALID_BUMPS))
+@click.option('--service', required=True, type=click.Choice(list(MIN_VERSIONS.keys())))
+@click.option('--pre-release/--no-pre-release', default=False)
+def tag_version(bump, service, pre_release):
     tags = subprocess.run(['git', 'tag', '--list'], capture_output=True, check=True) \
         .stdout.decode('utf-8').splitlines()
 
-    version_pattern = f'^{service}/v\\d+\\.\\d+\\.\\d+$'
+    # Filter out tags that don't match the service name, and tags
+    # for prerelease versions.
+    version_pattern = f'^{service}/v\\d+\\.\\d+\\.\\d+(?-rc.\\d+)$'
     svc_versions = [t.replace(f'{service}/v', '') for t in tags if re.match(version_pattern, t)]
-    svc_versions.sort(key=Version)
-    svc_versions.reverse()
+    svc_versions = sorted(svc_versions, key=lambda v: semver.Version.parse(v), reverse=True)
 
     if len(svc_versions) == 0:
         latest_version = MIN_VERSIONS[service]
@@ -72,20 +71,19 @@ def main():
 
     log.info(f'Latest version: v{latest_version}')
 
-    components = latest_version.split('.')
     if bump == 'major':
-        components[0] = str(int(components[0]) + 1)
-        components[1] = '0'
-        components[2] = '0'
-    if bump == 'minor':
-        components[1] = str(int(components[1]) + 1)
-        components[2] = '0'
+        bumped = latest_version.bump_major()
+    elif bump == 'minor':
+        bumped = latest_version.bump_minor()
     elif bump == 'patch':
-        components[2] = str(int(components[2]) + 1)
+        bumped = latest_version.bump_patch()
     else:
         raise Exception('Invalid bump type: {}'.format(bump))
 
-    new_version = 'v' + '.'.join(components)
+    if pre_release:
+        bumped = bumped.bump_prerelease()
+
+    new_version = 'v' + str(bumped)
     new_tag = f'{service}/{new_version}'
 
     log.info(f'Bumped version: {new_version}')
@@ -114,19 +112,10 @@ def main():
     subprocess.run(['git', 'push', 'origin', new_tag], check=True)
 
 
-def cmp_version(a, b):
-    if Version(a) < Version(b):
-        return -1
-    elif Version(a) > Version(b):
-        return 1
-    else:
-        return 0
-
-
 def die(msg):
     print(msg)
     sys.exit(1)
 
 
 if __name__ == '__main__':
-    main()
+    tag_version()

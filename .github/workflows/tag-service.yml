@@ -21,6 +21,11 @@ on:
           - op-proposer
           - proxyd
           - indexer
+      prerelease:
+        description: Is this a prerelease?
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -35,7 +40,8 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install deps
-        run: pip install packaging
-      - run: ops/scripts/tag-service.py ${{ github.event.inputs.bump }} ${{ github.event.inputs.service }}
+        run: pip install -r requirements.txt
+        working-directory: ops/tag-service
+      - run: ops/tag-service/tag-service.py --bump ${{ github.event.inputs.bump }} --service ${{ github.event.inputs.service }} ${{
         env:
           INPUT_GITHUB_TOKEN: ${{ github.token }}
