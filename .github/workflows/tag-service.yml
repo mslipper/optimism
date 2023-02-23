@@ -50,7 +50,7 @@ jobs:
           INPUT_GITHUB_TOKEN: ${{ github.token }}
           BUMP: ${{ github.event.inputs.bump }}
           SERVICE: ${{ github.event.inputs.service }}
-        if: ${{ !github.event.inputs.prerelease == 'false' }}
+        if: ${{ github.event.inputs.prerelease == 'false' }}
       - run: ops/tag-service/tag-service.py --bump="$BUMP" --service="$SERVICE" --pre-release
         env:
           INPUT_GITHUB_TOKEN: ${{ github.token }}
