@@ -1282,6 +1282,24 @@ jobs:
           command: bash scripts/ops/publish-artifacts.sh
           working_directory: packages/contracts-bedrock
 
+  go-release:
+    parameters:
+      module:
+        description: Go Module Name
+        type: string
+      filename:
+        description: Goreleaser config file
+        default: .goreleaser.yaml
+        type: string
+    machine: true
+    resource_class: ethereum-optimism/latitude-1
+    steps:
+      - checkout
+      - run:
+          name: Run goreleaser
+          command: |
+            ./bin/goreleaser release --clean -f ./<<parameters.module>>/<<parameters.filename>>
+
 workflows:
   main:
     when:
@@ -1475,6 +1493,14 @@ workflows:
           dir: .
           ignore-dirs:
             ./packages/contracts-bedrock/lib
+
+  go-release-deployer:
+    tags:
+      only: /^op-deployer.*/
+    branches:
+      ignore: /.*/
+    jobs:
+
 
   release:
     when:
